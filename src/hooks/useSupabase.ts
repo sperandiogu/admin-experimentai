@@ -1,0 +1,539 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../lib/supabase';
+import type { Customer, Product, Edition, Box, Order, Invoice, ProductEdition, WebhookConfig } from '../types';
+
+// Customers
+export function useCustomers() {
+  return useQuery({
+    queryKey: ['customers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('customer')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+}
+
+// Products
+export function useProducts() {
+  return useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+}
+
+// Editions
+export function useEditions() {
+  return useQuery({
+    queryKey: ['editions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('edition')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+}
+
+// Boxes
+export function useBoxes() {
+  return useQuery({
+    queryKey: ['boxes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('boxes')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+}
+
+// Edition Products
+export function useEditionProducts(editionId: string) {
+  return useQuery({
+    queryKey: ['edition-products', editionId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('product_edition')
+        .select('*')
+        .eq('edition_id', editionId);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+}
+
+// Webhook Configs
+export function useWebhookConfigs() {
+  return useQuery({
+    queryKey: ['webhook-configs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('webhook_config')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+}
+
+// Orders
+export function useOrders() {
+  return useQuery({
+    queryKey: ['orders'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('order')
+        .select(`
+          *,
+          customer:customer_id(name, email),
+          edition:edition(edition),
+          invoice:invoice_id(amount, status)
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+}
+
+// Invoices
+export function useInvoices() {
+  return useQuery({
+    queryKey: ['invoices'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('invoice')
+        .select(`
+          *,
+          customer:customer_id(name, email)
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+}
+
+// Dashboard stats
+export function useDashboardStats() {
+  return useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: async () => {
+      const [customers, orders, invoices, products] = await Promise.all([
+        supabase.from('customer').select('*', { count: 'exact' }),
+        supabase.from('order').select('*', { count: 'exact' }),
+        supabase.from('invoice').select('*', { count: 'exact' }),
+        supabase.from('products').select('*', { count: 'exact' })
+      ]);
+
+      const totalRevenue = await supabase
+        .from('invoice')
+        .select('amount')
+        .eq('status', 'paid');
+
+      const revenue = totalRevenue.data?.reduce((sum, invoice) => sum + (invoice.amount || 0), 0) || 0;
+
+      return {
+        totalCustomers: customers.count || 0,
+        totalOrders: orders.count || 0,
+        totalInvoices: invoices.count || 0,
+        totalProducts: products.count || 0,
+        totalRevenue: revenue
+      };
+    }
+  });
+}
+
+// Mutations
+export function useCreateCustomer() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (customer: any) => {
+      const { data, error } = await supabase
+        .from('customer')
+        .insert(customer)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+    }
+  });
+}
+
+export function useUpdateCustomer() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (customer: Partial<Customer> & { customer_id: string }) => {
+      const { data, error } = await supabase
+        .from('customer')
+        .update(customer)
+        .eq('customer_id', customer.customer_id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    }
+  });
+}
+
+export function useDeleteCustomer() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (customerId: string) => {
+      const { error } = await supabase
+        .from('customer')
+        .delete()
+        .eq('customer_id', customerId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    }
+  });
+}
+
+export function useCreateProduct() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (product: any) => {
+      const { data, error } = await supabase
+        .from('products')
+        .insert(product)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    }
+  });
+}
+
+export function useUpdateProduct() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (product: Partial<Product> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('products')
+        .update(product)
+        .eq('id', product.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    }
+  });
+}
+
+export function useDeleteProduct() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (productId: string) => {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    }
+  });
+}
+
+// Edition mutations
+export function useCreateEdition() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (edition: Omit<Edition, 'edition_id' | 'created_at' | 'updated_at'>) => {
+      const { data, error } = await supabase
+        .from('edition')
+        .insert(edition)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['editions'] });
+    }
+  });
+}
+
+export function useUpdateEdition() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (edition: Partial<Edition> & { edition_id: string }) => {
+      const { data, error } = await supabase
+        .from('edition')
+        .update({ ...edition, updated_at: new Date().toISOString() })
+        .eq('edition_id', edition.edition_id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['editions'] });
+    }
+  });
+}
+
+export function useDeleteEdition() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (editionId: string) => {
+      const { error } = await supabase
+        .from('edition')
+        .delete()
+        .eq('edition_id', editionId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['editions'] });
+    }
+  });
+}
+
+// Box mutations
+export function useCreateBox() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (box: Omit<Box, 'id' | 'created_at' | 'updated_at'>) => {
+      const { data, error } = await supabase
+        .from('boxes')
+        .insert(box)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['boxes'] });
+    }
+  });
+}
+
+export function useUpdateBox() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (box: Partial<Box> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('boxes')
+        .update({ ...box, updated_at: new Date().toISOString() })
+        .eq('id', box.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['boxes'] });
+    }
+  });
+}
+
+export function useDeleteBox() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (boxId: string) => {
+      const { error } = await supabase
+        .from('boxes')
+        .delete()
+        .eq('id', boxId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['boxes'] });
+    }
+  });
+}
+
+// Product Edition mutations
+export function useAddProductToEdition() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: ProductEdition) => {
+      const { error } = await supabase
+        .from('product_edition')
+        .insert(data);
+      
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['edition-products', variables.edition_id] });
+    }
+  });
+}
+
+export function useRemoveProductFromEdition() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: ProductEdition) => {
+      const { error } = await supabase
+        .from('product_edition')
+        .delete()
+        .eq('edition_id', data.edition_id)
+        .eq('product_id', data.product_id);
+      
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['edition-products', variables.edition_id] });
+    }
+  });
+}
+
+// Webhook Config mutations
+export function useCreateWebhookConfig() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (config: { url: string }) => {
+      const { data, error } = await supabase
+        .from('webhook_config')
+        .insert(config)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['webhook-configs'] });
+    }
+  });
+}
+
+export function useDeleteWebhookConfig() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const { error } = await supabase
+        .from('webhook_config')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['webhook-configs'] });
+    }
+  });
+}
+
+export function useUpdateOrderStatus() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ orderId, status }: { orderId: string; status: string }) => {
+      const { data, error } = await supabase
+        .from('order')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('order_id', orderId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    }
+  });
+}
+
+// Order tracking update
+export function useUpdateOrderTracking() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ orderId, tracking_code, tracking_url }: { 
+      orderId: string; 
+      tracking_code: string; 
+      tracking_url?: string; 
+    }) => {
+      const { data, error } = await supabase
+        .from('order')
+        .update({ 
+          tracking_code, 
+          tracking_url,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('order_id', orderId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    }
+  });
+}
