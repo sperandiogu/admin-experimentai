@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, FileText, ExternalLink, CreditCard, Eye, Download } from 'lucide-react';
+import { Search, FileText, ExternalLink, CreditCard, Eye, Download, User } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
