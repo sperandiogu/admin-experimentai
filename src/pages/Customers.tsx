@@ -16,11 +16,8 @@ import { formatPhone, formatCPF } from '../utils/formatters';
 import type { Customer } from '../types';
 
 export default function Customers() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
