@@ -4,7 +4,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Table } from '../components/ui/Table';
-import { Badge } from '../components/ui/Badge';
+import Badge from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { CustomerForm } from '../components/forms/CustomerForm';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';

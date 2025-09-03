@@ -3,7 +3,7 @@ import { Search, Package, Truck, Edit, Eye, Filter } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Table } from '../components/ui/Table';
-import { Badge } from '../components/ui/Badge';
+import Badge from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
