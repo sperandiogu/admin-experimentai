@@ -8,13 +8,13 @@ interface CardProps {
 
 export default function Card({ children, className = '', padding = 'md' }: CardProps) {
   const paddingClasses = {
-    sm: 'p-4',
-    md: 'p-6',
-    lg: 'p-8'
+    sm: '',
+    md: '',
+    lg: ''
   };
 
   return (
-    <div className={`bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 ${paddingClasses[padding]} ${className}`}>
+    <div className={`bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 ${className}`}>
       {children}
     </div>
   );
