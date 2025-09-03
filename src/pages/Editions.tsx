@@ -15,11 +15,8 @@ import { useToast } from '../hooks/useToast';
 import type { Edition } from '../types';
 
 export default function Editions() {
-  const [editions, setEditions] = useState<Edition[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [showProductManager, setShowProductManager] = useState(false);
   const [editingEdition, setEditingEdition] = useState<Edition | null>(null);
