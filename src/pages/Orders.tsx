@@ -198,7 +198,7 @@ export default function Orders() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {formatCurrency(order.amount || 0)}
+                    {formatCurrency(order.amount || 0, true)}
                   </TableCell>
                   <TableCell>
                     {order.tracking_code ? (

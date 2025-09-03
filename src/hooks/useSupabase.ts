@@ -155,7 +155,7 @@ export function useDashboardStats() {
         .select('amount')
         .eq('status', 'paid');
 
-      const revenue = totalRevenue.data?.reduce((sum, invoice) => sum + (invoice.amount || 0), 0) || 0;
+      const revenue = totalRevenue.data?.reduce((sum, invoice) => sum + ((invoice.amount || 0) / 100), 0) || 0;
 
       return {
         totalCustomers: customers.count || 0,

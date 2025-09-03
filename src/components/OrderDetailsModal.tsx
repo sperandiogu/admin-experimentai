@@ -49,7 +49,7 @@ export default function OrderDetailsModal({ order, isOpen, onClose }: OrderDetai
               {new Intl.NumberFormat('pt-BR', { 
                 style: 'currency', 
                 currency: 'BRL' 
-              }).format(order.amount || 0)}
+              }).format((order.amount || 0) / 100)}
             </p>
             <p className="text-sm text-gray-500">
               {format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}

@@ -1,8 +1,9 @@
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: number, fromCents: boolean = true): string {
+  const value = fromCents ? amount / 100 : amount;
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
-  }).format(amount);
+  }).format(value);
 }
 
 export function formatDate(date: string | Date): string {

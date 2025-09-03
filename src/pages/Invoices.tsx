@@ -150,7 +150,7 @@ export default function Invoices() {
                     {new Intl.NumberFormat('pt-BR', { 
                       style: 'currency', 
                       currency: 'BRL' 
-                    }).format(invoice.amount || 0)}
+                    }).format((invoice.amount || 0) / 100)}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -229,7 +229,7 @@ export default function Invoices() {
                   {new Intl.NumberFormat('pt-BR', { 
                     style: 'currency', 
                     currency: 'BRL' 
-                  }).format(viewingInvoice.amount || 0)}
+                  }).format((viewingInvoice.amount || 0) / 100)}
                 </p>
                 <p className="text-sm text-gray-500">
                   {format(new Date(viewingInvoice.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
