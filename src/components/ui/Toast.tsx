@@ -43,7 +43,7 @@ export default function Toast({ type, message, isVisible, onClose, duration = 50
   const Icon = icons[type];
 
   return (
-    <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300">
+    <div className="fixed top-4 right-4 z-50">
       <div className={`flex items-center gap-3 p-4 rounded-lg border shadow-lg max-w-md ${colors[type]}`}>
         <Icon className={`w-5 h-5 ${iconColors[type]}`} />
         <p className="flex-1 text-sm font-medium">{message}</p>

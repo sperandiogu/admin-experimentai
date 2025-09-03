@@ -537,3 +537,26 @@ export function useUpdateOrderTracking() {
     }
   });
 }
+
+// Invoice status update
+export function useUpdateInvoiceStatus() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ invoiceId, status }: { invoiceId: string; status: string }) => {
+      const { data, error } = await supabase
+        .from('invoice')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('invoice_id', invoiceId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    }
+  });
+}

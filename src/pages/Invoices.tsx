@@ -5,7 +5,8 @@ import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/Table';
-import { useInvoices } from '../hooks/useSupabase';
+import { useInvoices, useUpdateInvoiceStatus } from '../hooks/useSupabase';
+import { useToast } from '../hooks/useToast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -25,6 +26,8 @@ const statusLabels = {
 
 export default function Invoices() {
   const { data: invoices, isLoading } = useInvoices();
+  const updateInvoiceStatus = useUpdateInvoiceStatus();
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [viewingInvoice, setViewingInvoice] = useState<any>(null);
@@ -43,6 +46,15 @@ export default function Invoices() {
     pending: invoices?.filter(i => i.status === 'pending').length || 0,
     failed: invoices?.filter(i => i.status === 'failed').length || 0,
     totalRevenue: invoices?.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.amount || 0), 0) || 0
+  };
+
+  const handleStatusUpdate = async (invoiceId: string, newStatus: string) => {
+    try {
+      await updateInvoiceStatus.mutateAsync({ invoiceId, status: newStatus });
+      showToast('Status da fatura atualizado com sucesso!', 'success');
+    } catch (error) {
+      showToast('Erro ao atualizar status da fatura', 'error');
+    }
   };
 
   if (isLoading) {
@@ -203,6 +215,16 @@ export default function Invoices() {
                         <Download className="w-4 h-4" />
                       </Button>
                     )}
+                    <select
+                      value={invoice.status}
+                      onChange={(e) => handleStatusUpdate(invoice.invoice_id, e.target.value)}
+                      disabled={updateInvoiceStatus.isPending}
+                      className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                    >
+                      {Object.entries(statusLabels).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
                   </div>
                 </TableCell>
               </TableRow>
