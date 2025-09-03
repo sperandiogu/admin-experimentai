@@ -14,13 +14,10 @@ import { formatCurrency } from '../utils/formatters';
 import type { Invoice } from '../types';
 
 export default function Invoices() {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
   const { data: allInvoices = [], isLoading } = useInvoices();
   const { showToast } = useToast();
@@ -41,7 +38,7 @@ export default function Invoices() {
 
   const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const invoices = filteredInvoices.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedInvoices = filteredInvoices.slice(startIndex, startIndex + itemsPerPage);
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -202,7 +199,7 @@ export default function Invoices() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {invoices.map((invoice) => (
+              {paginatedInvoices.map((invoice) => (
                 <TableRow key={invoice.invoice_id}>
                   <TableCell>
                     <span className="font-mono text-sm text-gray-900">
