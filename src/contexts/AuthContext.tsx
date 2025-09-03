@@ -33,21 +33,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for redirect result first
-    const checkRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          // User signed in via redirect
-          console.log('Login via redirect successful');
-        }
-      } catch (error: any) {
-        console.error('Redirect result error:', error);
-      }
-    };
-
-    checkRedirectResult();
-
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         setUser({
@@ -80,22 +65,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await signInWithPopup(auth, provider);
     } catch (error: any) {
       console.error('Erro de autenticação:', error);
-      if (error.code === 'auth/popup-blocked') {
-        throw new Error('POPUP_BLOCKED');
-      }
-      throw new Error(getErrorMessage(error.code));
-    }
-  };
-
-  const signInWithGoogleRedirect = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      provider.addScope('email');
-      provider.addScope('profile');
-      
-      await signInWithRedirect(auth, provider);
-    } catch (error: any) {
-      console.error('Erro de autenticação via redirect:', error);
       throw new Error(getErrorMessage(error.code));
     }
   };
@@ -131,7 +100,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     loading,
     signInWithGoogle,
-    signInWithGoogleRedirect,
     signOut,
   };
 
