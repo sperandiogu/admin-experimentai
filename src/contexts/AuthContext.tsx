@@ -61,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       await signInWithPopup(auth, provider);
     } catch (error: any) {
+      console.error('Erro de autenticação:', error);
       throw new Error(getErrorMessage(error.code));
     }
   };
