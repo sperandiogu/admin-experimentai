@@ -5,7 +5,11 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Card from '../ui/Card';
 
-export default function LoginForm() {
+interface LoginFormProps {
+  onSwitchToRegister: () => void;
+}
+
+export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -96,6 +100,19 @@ export default function LoginForm() {
                 {loading ? 'Entrando...' : 'Entrar'}
               </Button>
             </form>
+
+            {/* Switch to Register */}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Não tem uma conta?{' '}
+                <button
+                  onClick={onSwitchToRegister}
+                  className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                >
+                  Criar conta
+                </button>
+              </p>
+            </div>
 
             {/* Footer */}
             <div className="mt-8 text-center">

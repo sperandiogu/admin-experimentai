@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useToast } from './hooks/useToast';
 import Toast from './components/ui/Toast';
-import LoginForm from './components/auth/LoginForm';
+import AuthContainer from './components/auth/AuthContainer';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
@@ -46,7 +46,7 @@ function AppContent() {
   }
 
   if (!user) {
-    return <LoginForm />;
+    return <AuthContainer />;
   }
 
   const renderPage = () => {
