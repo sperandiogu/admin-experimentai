@@ -63,11 +63,11 @@ function App() {
 
         {/* Conteúdo principal */}
         <div
-          className="flex-1 flex flex-col transition-all duration-300 overflow-hidden lg:ml-64"
+          className="flex-1 flex flex-col transition-all duration-300 overflow-hidden"
         >
           <Header setSidebarOpen={setSidebarOpen} />
 
-          <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 overflow-auto">
+          <main className="flex-1 py-6 px-4 sm:px-6 lg:px-8 overflow-auto">
             <div className="w-full max-w-full mx-auto">
               {renderPage()}
             </div>
