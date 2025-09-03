@@ -54,13 +54,6 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
 
             {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Demo Credentials Info */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800 font-medium mb-2">Credenciais de Demonstração:</p>
-                <p className="text-xs text-blue-700">Email: admin@admin.com</p>
-                <p className="text-xs text-blue-700">Senha: admin123</p>
-              </div>
-
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input

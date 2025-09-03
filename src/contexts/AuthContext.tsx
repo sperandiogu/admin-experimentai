@@ -1,4 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  updateProfile,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 interface User {
   id: string;
@@ -17,86 +26,75 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Usuários pré-definidos (em produção, isso viria de uma API)
-const ADMIN_USERS = [
-  {
-    id: '1',
-    email: 'admin@admin.com',
-    password: 'admin123',
-    name: 'Administrador',
-    role: 'admin'
-  }
-];
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar se há usuário logado no localStorage
-    const savedUser = localStorage.getItem('admin_user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        localStorage.removeItem('admin_user');
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        setUser({
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Admin',
+          role: 'admin'
+        });
+      } else {
+        setUser(null);
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    // Simular delay de rede
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Verificar credenciais
-    const adminUser = ADMIN_USERS.find(u => u.email === email && u.password === password);
-    
-    if (!adminUser) {
-      throw new Error('Email ou senha incorretos');
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error: any) {
+      throw new Error(getErrorMessage(error.code));
     }
-
-    const userSession = {
-      id: adminUser.id,
-      email: adminUser.email,
-      name: adminUser.name,
-      role: adminUser.role
-    };
-
-    // Salvar no localStorage
-    localStorage.setItem('admin_user', JSON.stringify(userSession));
-    setUser(userSession);
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    // Simular delay de rede
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Verificar se email já existe
-    const existingUser = ADMIN_USERS.find(u => u.email === email);
-    if (existingUser) {
-      throw new Error('Este email já está cadastrado');
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Update the user's display name
+      await updateProfile(userCredential.user, {
+        displayName: fullName
+      });
+      
+    } catch (error: any) {
+      throw new Error(getErrorMessage(error.code));
     }
-
-    // Em um sistema real, isso salvaria no banco de dados
-    // Por enquanto, vamos apenas simular sucesso
-    const newUser = {
-      id: Date.now().toString(),
-      email,
-      password,
-      name: fullName,
-      role: 'admin'
-    };
-
-    // Adicionar à lista de usuários (temporário)
-    ADMIN_USERS.push(newUser);
-    
-    // Não fazer login automático, apenas confirmar criação
   };
 
   const signOut = async () => {
-    localStorage.removeItem('admin_user');
-    setUser(null);
+    try {
+      await firebaseSignOut(auth);
+    } catch (error: any) {
+      throw new Error('Erro ao fazer logout');
+    }
+  };
+
+  const getErrorMessage = (errorCode: string) => {
+    switch (errorCode) {
+      case 'auth/user-not-found':
+        return 'Usuário não encontrado';
+      case 'auth/wrong-password':
+        return 'Senha incorreta';
+      case 'auth/email-already-in-use':
+        return 'Este email já está em uso';
+      case 'auth/weak-password':
+        return 'Senha muito fraca (mínimo 6 caracteres)';
+      case 'auth/invalid-email':
+        return 'Email inválido';
+      case 'auth/too-many-requests':
+        return 'Muitas tentativas. Tente novamente mais tarde';
+      default:
+        return 'Erro de autenticação';
+    }
   };
 
   const value = {
