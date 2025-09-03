@@ -170,7 +170,8 @@ export default function Products() {
       </div>
 
       {/* Search and Filters */}
-      <Card className="p-6">
+      <Card>
+        <div className="p-6">
         <div className="flex items-center space-x-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -185,10 +186,14 @@ export default function Products() {
             />
           </div>
         </div>
+        </div>
       </Card>
 
       {/* Products Table */}
       <Card>
+        <div className="p-6 pb-0">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Catálogo de Produtos</h3>
+        </div>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>

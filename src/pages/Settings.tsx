@@ -78,6 +78,7 @@ export default function Settings() {
 
       {/* Webhook Configuration */}
       <Card>
+        <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -142,10 +143,12 @@ export default function Settings() {
             <p className="text-gray-500 mt-1">Configure webhooks para receber notificações de eventos</p>
           </div>
         )}
+        </div>
       </Card>
 
       {/* System Information */}
       <Card>
+        <div className="p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-gray-100 rounded-lg">
             <SettingsIcon className="w-5 h-5 text-gray-600" />
@@ -184,6 +187,7 @@ export default function Settings() {
               <span className="text-sm text-green-600 font-medium">Operacional</span>
             </div>
           </div>
+        </div>
         </div>
       </Card>
 

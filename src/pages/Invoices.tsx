@@ -65,6 +65,7 @@ export default function Invoices() {
 
       {/* Filters */}
       <Card>
+        <div className="p-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -87,29 +88,37 @@ export default function Invoices() {
             ))}
           </select>
         </div>
+        </div>
       </Card>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card padding="sm">
+        <Card>
+          <div className="p-4">
           <div className="text-center">
             <p className="text-2xl font-bold text-gray-900">{invoiceStats.total}</p>
             <p className="text-sm text-gray-600">Total de Faturas</p>
           </div>
+          </div>
         </Card>
-        <Card padding="sm">
+        <Card>
+          <div className="p-4">
           <div className="text-center">
             <p className="text-2xl font-bold text-green-600">{invoiceStats.paid}</p>
             <p className="text-sm text-gray-600">Pagas</p>
           </div>
+          </div>
         </Card>
-        <Card padding="sm">
+        <Card>
+          <div className="p-4">
           <div className="text-center">
             <p className="text-2xl font-bold text-yellow-600">{invoiceStats.pending}</p>
             <p className="text-sm text-gray-600">Pendentes</p>
           </div>
+          </div>
         </Card>
-        <Card padding="sm">
+        <Card>
+          <div className="p-4">
           <div className="text-center">
             <p className="text-2xl font-bold text-blue-600">
               {new Intl.NumberFormat('pt-BR', { 
@@ -120,11 +129,15 @@ export default function Invoices() {
             </p>
             <p className="text-sm text-gray-600">Receita</p>
           </div>
+          </div>
         </Card>
       </div>
 
       {/* Invoices Table */}
       <Card>
+        <div className="p-6 pb-0">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Lista de Faturas</h3>
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
