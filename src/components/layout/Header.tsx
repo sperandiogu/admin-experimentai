@@ -48,14 +48,22 @@ export default function Header({ setSidebarOpen }: HeaderProps) {
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <div className="text-sm font-medium text-gray-900">
-                {user?.name || 'Administrador'}
+                {user?.name}
               </div>
               <div className="text-xs text-gray-500">{user?.email}</div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-white" />
-              </div>
+              {user?.avatar ? (
+                <img 
+                  src={user.avatar} 
+                  alt={user.name}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-white" />
+                </div>
+              )}
               <Button
                 variant="ghost"
                 size="sm"

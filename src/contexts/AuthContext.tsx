@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut as firebaseSignOut,
   onAuthStateChanged,
-  updateProfile,
   User as FirebaseUser
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
@@ -13,14 +12,14 @@ interface User {
   id: string;
   email: string;
   name: string;
+  avatar: string;
   role: string;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -37,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: firebaseUser.uid,
           email: firebaseUser.email || '',
           name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Admin',
+          avatar: firebaseUser.photoURL || '',
           role: 'admin'
         });
       } else {
@@ -48,23 +48,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signInWithGoogle = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error: any) {
-      throw new Error(getErrorMessage(error.code));
-    }
-  };
-
-  const signUp = async (email: string, password: string, fullName: string) => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const provider = new GoogleAuthProvider();
+      provider.addScope('email');
+      provider.addScope('profile');
       
-      // Update the user's display name
-      await updateProfile(userCredential.user, {
-        displayName: fullName
+      // Force account selection
+      provider.setCustomParameters({
+        prompt: 'select_account'
       });
-      
+
+      await signInWithPopup(auth, provider);
     } catch (error: any) {
       throw new Error(getErrorMessage(error.code));
     }
@@ -80,28 +75,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getErrorMessage = (errorCode: string) => {
     switch (errorCode) {
-      case 'auth/user-not-found':
-        return 'Usuário não encontrado';
-      case 'auth/wrong-password':
-        return 'Senha incorreta';
-      case 'auth/email-already-in-use':
-        return 'Este email já está em uso';
-      case 'auth/weak-password':
-        return 'Senha muito fraca (mínimo 6 caracteres)';
-      case 'auth/invalid-email':
-        return 'Email inválido';
+      case 'auth/popup-closed-by-user':
+        return 'Login cancelado pelo usuário';
+      case 'auth/popup-blocked':
+        return 'Popup bloqueado pelo navegador. Permita popups para este site';
+      case 'auth/cancelled-popup-request':
+        return 'Solicitação de login cancelada';
+      case 'auth/network-request-failed':
+        return 'Erro de conexão. Verifique sua internet';
       case 'auth/too-many-requests':
         return 'Muitas tentativas. Tente novamente mais tarde';
+      case 'auth/user-disabled':
+        return 'Conta desabilitada. Entre em contato com o suporte';
       default:
-        return 'Erro de autenticação';
+        return 'Erro de autenticação. Tente novamente';
     }
   };
 
   const value = {
     user,
     loading,
-    signIn,
-    signUp,
+    signInWithGoogle,
     signOut,
   };
 

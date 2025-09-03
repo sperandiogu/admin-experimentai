@@ -1,48 +1,55 @@
 import React, { useState } from 'react';
-import { Lock, Mail, Eye, EyeOff, LogIn } from 'lucide-react';
+import { Chrome, Shield, Users, BarChart3 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../ui/Button';
-import Input from '../ui/Input';
 import Card from '../ui/Card';
 
-interface LoginFormProps {
-  onSwitchToRegister: () => void;
-}
-
-export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
-  const { signIn } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+export default function LoginForm() {
+  const { signInWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGoogleSignIn = async () => {
     setLoading(true);
     setError('');
 
     try {
-      await signIn(email, password);
+      await signInWithGoogle();
     } catch (err: any) {
-      setError(err.message || 'Erro ao fazer login');
+      setError(err.message || 'Erro ao fazer login com Google');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Card>
           <div className="p-8">
             {/* Header */}
             <div className="text-center mb-8">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Lock className="w-8 h-8 text-white" />
+                <Shield className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-2xl font-bold text-gray-900">Painel Administrativo</h1>
-              <p className="text-gray-600 mt-2">Faça login para acessar o sistema</p>
+              <p className="text-gray-600 mt-2">Clube de Assinatura</p>
+            </div>
+
+            {/* Features Preview */}
+            <div className="mb-8 space-y-3">
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <Users className="w-4 h-4 text-blue-500" />
+                <span>Gerenciar clientes e assinantes</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <BarChart3 className="w-4 h-4 text-green-500" />
+                <span>Acompanhar vendas e métricas</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <Shield className="w-4 h-4 text-purple-500" />
+                <span>Controle total do sistema</span>
+              </div>
             </div>
 
             {/* Error Message */}
@@ -52,72 +59,48 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
               </div>
             )}
 
-            {/* Login Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={loading}
-                  className="pl-12 pr-4 py-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50"
-                />
-              </div>
-
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Senha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                  className="pl-12 pr-12 py-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-
+            {/* Google Sign In */}
+            <div className="space-y-4">
               <Button
-                type="submit"
-                disabled={loading || !email || !password}
-                className="w-full flex items-center justify-center gap-2 py-3"
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 py-4 bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500"
+                variant="secondary"
               >
                 {loading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <LogIn className="w-5 h-5" />
+                  <Chrome className="w-5 h-5 text-blue-500" />
                 )}
-                {loading ? 'Entrando...' : 'Entrar'}
+                <span className="font-medium">
+                  {loading ? 'Conectando...' : 'Entrar com Google'}
+                </span>
               </Button>
-            </form>
 
-            {/* Switch to Register */}
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Não tem uma conta?{' '}
-                <button
-                  onClick={onSwitchToRegister}
-                  className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                >
-                  Criar conta
-                </button>
-              </p>
+              <div className="text-center">
+                <p className="text-xs text-gray-500">
+                  Acesso restrito a administradores autorizados
+                </p>
+              </div>
+            </div>
+
+            {/* Security Notice */}
+            <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-start gap-3">
+                <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="text-sm font-medium text-blue-900">Acesso Seguro</h3>
+                  <p className="text-xs text-blue-700 mt-1">
+                    Autenticação via Google para máxima segurança. Apenas contas autorizadas podem acessar o painel.
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Footer */}
             <div className="mt-8 text-center">
               <p className="text-xs text-gray-500">
-                Clube de Assinatura - Painel Administrativo
+                © 2024 Clube de Assinatura - Todos os direitos reservados
               </p>
             </div>
           </div>
