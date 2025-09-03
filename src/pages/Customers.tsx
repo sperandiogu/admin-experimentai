@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, Users, Phone, Mail, MapPin, CreditCard } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Table } from '../components/ui/Table';
+import Input from '../components/ui/Input';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/Table';
 import Badge from '../components/ui/Badge';
-import { Modal } from '../components/ui/Modal';
-import { CustomerForm } from '../components/forms/CustomerForm';
-import { ConfirmDialog } from '../components/ui/ConfirmDialog';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { Pagination } from '../components/ui/Pagination';
-import { useSupabase } from '../hooks/useSupabase';
+import Modal from '../components/ui/Modal';
+import CustomerForm from '../components/forms/CustomerForm';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import Pagination from '../components/ui/Pagination';
+import { useCustomers, useCreateCustomer, useUpdateCustomer, useDeleteCustomer } from '../hooks/useSupabase';
 import { useToast } from '../hooks/useToast';
 import { formatPhone, formatCPF } from '../utils/formatters';
 import type { Customer } from '../types';
@@ -26,52 +26,45 @@ export default function Customers() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
 
-  const { fetchCustomers, createCustomer, updateCustomer, deleteCustomer } = useSupabase();
+  const { data: customers = [], isLoading } = useCustomers();
+  const createCustomer = useCreateCustomer();
+  const updateCustomer = useUpdateCustomer();
+  const deleteCustomer = useDeleteCustomer();
   const { showToast } = useToast();
 
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    loadCustomers();
-  }, [currentPage, searchTerm]);
+  const filteredCustomers = customers.filter(customer =>
+    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (customer.cpf && customer.cpf.includes(searchTerm))
+  );
 
-  const loadCustomers = async () => {
-    setLoading(true);
-    try {
-      const { data, total } = await fetchCustomers({
-        page: currentPage,
-        limit: itemsPerPage,
-        search: searchTerm
-      });
-      setCustomers(data);
-      setTotalPages(Math.ceil(total / itemsPerPage));
-    } catch (error) {
-      showToast('Erro ao carregar clientes', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedCustomers = filteredCustomers.slice(startIndex, startIndex + itemsPerPage);
 
-  const handleCreateCustomer = async (customerData: Omit<Customer, 'customer_id' | 'created_at'>) => {
+  const handleCreateCustomer = async (customerData: any) => {
     try {
-      await createCustomer(customerData);
+      await createCustomer.mutateAsync(customerData);
       showToast('Cliente criado com sucesso!', 'success');
       setShowForm(false);
-      loadCustomers();
     } catch (error) {
       showToast('Erro ao criar cliente', 'error');
     }
   };
 
-  const handleUpdateCustomer = async (customerData: Omit<Customer, 'customer_id' | 'created_at'>) => {
+  const handleUpdateCustomer = async (customerData: any) => {
     if (!editingCustomer) return;
     
     try {
-      await updateCustomer(editingCustomer.customer_id, customerData);
+      await updateCustomer.mutateAsync({
+        customer_id: editingCustomer.customer_id,
+        ...customerData
+      });
       showToast('Cliente atualizado com sucesso!', 'success');
       setShowForm(false);
       setEditingCustomer(null);
-      loadCustomers();
     } catch (error) {
       showToast('Erro ao atualizar cliente', 'error');
     }
@@ -81,11 +74,10 @@ export default function Customers() {
     if (!customerToDelete) return;
 
     try {
-      await deleteCustomer(customerToDelete.customer_id);
+      await deleteCustomer.mutateAsync(customerToDelete.customer_id);
       showToast('Cliente excluído com sucesso!', 'success');
       setShowDeleteDialog(false);
       setCustomerToDelete(null);
-      loadCustomers();
     } catch (error) {
       showToast('Erro ao excluir cliente', 'error');
     }
@@ -106,13 +98,7 @@ export default function Customers() {
     setEditingCustomer(null);
   };
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (customer.cpf && customer.cpf.includes(searchTerm))
-  );
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <LoadingSpinner size="lg" />
@@ -202,21 +188,21 @@ export default function Customers() {
       <Card>
         <div className="overflow-x-auto">
           <Table>
-            <thead>
-              <tr>
-                <th>Cliente</th>
-                <th>Contato</th>
-                <th>CPF</th>
-                <th>Endereço</th>
-                <th>Status</th>
-                <th>Cadastro</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCustomers.map((customer) => (
-                <tr key={customer.customer_id}>
-                  <td>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Contato</TableHead>
+                <TableHead>CPF</TableHead>
+                <TableHead>Endereço</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Cadastro</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedCustomers.map((customer) => (
+                <TableRow key={customer.customer_id}>
+                  <TableCell>
                     <div>
                       <div className="font-medium text-gray-900">{customer.name}</div>
                       <div className="text-sm text-gray-500 flex items-center">
@@ -224,39 +210,39 @@ export default function Customers() {
                         {customer.email}
                       </div>
                     </div>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     {customer.phone && (
                       <div className="text-sm text-gray-900 flex items-center">
                         <Phone className="w-3 h-3 mr-1" />
                         {formatPhone(customer.phone)}
                       </div>
                     )}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     {customer.cpf && (
                       <span className="text-sm text-gray-900">{formatCPF(customer.cpf)}</span>
                     )}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     {customer.address && (
                       <div className="text-sm text-gray-900 flex items-center max-w-xs truncate">
                         <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
                         <span className="truncate">{customer.address}</span>
                       </div>
                     )}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <Badge variant={customer.stripe_customer_id ? 'success' : 'secondary'}>
                       {customer.stripe_customer_id ? 'Ativo' : 'Inativo'}
                     </Badge>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <span className="text-sm text-gray-900">
                       {new Date(customer.created_at).toLocaleDateString('pt-BR')}
                     </span>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center space-x-2">
                       <Button
                         variant="ghost"
@@ -274,10 +260,10 @@ export default function Customers() {
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
+            </TableBody>
           </Table>
         </div>
 
@@ -287,6 +273,8 @@ export default function Customers() {
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredCustomers.length}
           />
         </div>
       </Card>
@@ -300,8 +288,8 @@ export default function Customers() {
       >
         <CustomerForm
           customer={editingCustomer}
-          onSubmit={editingCustomer ? handleUpdateCustomer : handleCreateCustomer}
-          onCancel={closeForm}
+         onSuccess={editingCustomer ? handleUpdateCustomer : handleCreateCustomer}
+         onCancel={closeForm}
         />
       </Modal>
 

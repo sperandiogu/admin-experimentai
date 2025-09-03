@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, Calendar, Package, Users } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Table } from '../components/ui/Table';
-import { Modal } from '../components/ui/Modal';
-import { EditionForm } from '../components/forms/EditionForm';
-import { EditionProductManager } from '../components/EditionProductManager';
-import { ConfirmDialog } from '../components/ui/ConfirmDialog';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { Pagination } from '../components/ui/Pagination';
-import { useSupabase } from '../hooks/useSupabase';
+import Input from '../components/ui/Input';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/Table';
+import Modal from '../components/ui/Modal';
+import EditionForm from '../components/forms/EditionForm';
+import EditionProductManager from '../components/EditionProductManager';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import Pagination from '../components/ui/Pagination';
+import { useEditions, useCreateEdition, useUpdateEdition, useDeleteEdition } from '../hooks/useSupabase';
 import { useToast } from '../hooks/useToast';
 import type { Edition } from '../types';
 
@@ -27,52 +27,43 @@ export default function Editions() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [editionToDelete, setEditionToDelete] = useState<Edition | null>(null);
 
-  const { fetchEditions, createEdition, updateEdition, deleteEdition } = useSupabase();
+  const { data: editions = [], isLoading } = useEditions();
+  const createEdition = useCreateEdition();
+  const updateEdition = useUpdateEdition();
+  const deleteEdition = useDeleteEdition();
   const { showToast } = useToast();
 
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    loadEditions();
-  }, [currentPage, searchTerm]);
+  const filteredEditions = editions.filter(edition =>
+    edition.edition.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const loadEditions = async () => {
-    setLoading(true);
-    try {
-      const { data, total } = await fetchEditions({
-        page: currentPage,
-        limit: itemsPerPage,
-        search: searchTerm
-      });
-      setEditions(data);
-      setTotalPages(Math.ceil(total / itemsPerPage));
-    } catch (error) {
-      showToast('Erro ao carregar edições', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const totalPages = Math.ceil(filteredEditions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedEditions = filteredEditions.slice(startIndex, startIndex + itemsPerPage);
 
-  const handleCreateEdition = async (editionData: Omit<Edition, 'edition_id' | 'created_at' | 'updated_at'>) => {
+  const handleCreateEdition = async (editionData: any) => {
     try {
-      await createEdition(editionData);
+      await createEdition.mutateAsync(editionData);
       showToast('Edição criada com sucesso!', 'success');
       setShowForm(false);
-      loadEditions();
     } catch (error) {
       showToast('Erro ao criar edição', 'error');
     }
   };
 
-  const handleUpdateEdition = async (editionData: Omit<Edition, 'edition_id' | 'created_at' | 'updated_at'>) => {
+  const handleUpdateEdition = async (editionData: any) => {
     if (!editingEdition) return;
     
     try {
-      await updateEdition(editingEdition.edition_id, editionData);
+      await updateEdition.mutateAsync({
+        edition_id: editingEdition.edition_id,
+        ...editionData
+      });
       showToast('Edição atualizada com sucesso!', 'success');
       setShowForm(false);
       setEditingEdition(null);
-      loadEditions();
     } catch (error) {
       showToast('Erro ao atualizar edição', 'error');
     }
@@ -82,11 +73,10 @@ export default function Editions() {
     if (!editionToDelete) return;
 
     try {
-      await deleteEdition(editionToDelete.edition_id);
+      await deleteEdition.mutateAsync(editionToDelete.edition_id);
       showToast('Edição excluída com sucesso!', 'success');
       setShowDeleteDialog(false);
       setEditionToDelete(null);
-      loadEditions();
     } catch (error) {
       showToast('Erro ao excluir edição', 'error');
     }
@@ -117,11 +107,7 @@ export default function Editions() {
     setManagingEdition(null);
   };
 
-  const filteredEditions = editions.filter(edition =>
-    edition.edition.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <LoadingSpinner size="lg" />
@@ -209,31 +195,31 @@ export default function Editions() {
       <Card>
         <div className="overflow-x-auto">
           <Table>
-            <thead>
-              <tr>
-                <th>Edição</th>
-                <th>Data de Criação</th>
-                <th>Última Atualização</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredEditions.map((edition) => (
-                <tr key={edition.edition_id}>
-                  <td>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Edição</TableHead>
+                <TableHead>Data de Criação</TableHead>
+                <TableHead>Última Atualização</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedEditions.map((edition) => (
+                <TableRow key={edition.edition_id}>
+                  <TableCell>
                     <div className="font-medium text-gray-900">{edition.edition}</div>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <span className="text-sm text-gray-900">
                       {new Date(edition.created_at).toLocaleDateString('pt-BR')}
                     </span>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <span className="text-sm text-gray-900">
                       {new Date(edition.updated_at).toLocaleDateString('pt-BR')}
                     </span>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center space-x-2">
                       <Button
                         variant="ghost"
@@ -259,10 +245,10 @@ export default function Editions() {
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
+            </TableBody>
           </Table>
         </div>
 
@@ -272,6 +258,8 @@ export default function Editions() {
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredEditions.length}
           />
         </div>
       </Card>
@@ -284,7 +272,7 @@ export default function Editions() {
       >
         <EditionForm
           edition={editingEdition}
-          onSubmit={editingEdition ? handleUpdateEdition : handleCreateEdition}
+         onSuccess={editingEdition ? handleUpdateEdition : handleCreateEdition}
           onCancel={closeForm}
         />
       </Modal>

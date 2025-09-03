@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Package, Truck, Edit, Eye, Filter } from 'lucide-react';
-import { Card } from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
-import { Table } from '../components/ui/Table';
+import Card from '../components/ui/Card';
+import Input from '../components/ui/Input';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/Table';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
-import { Select } from '../components/ui/Select';
-import { Modal } from '../components/ui/Modal';
-import { OrderDetailsModal } from '../components/OrderDetailsModal';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { Pagination } from '../components/ui/Pagination';
-import { useSupabase } from '../hooks/useSupabase';
+import Select from '../components/ui/Select';
+import Modal from '../components/ui/Modal';
+import OrderDetailsModal from '../components/OrderDetailsModal';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import Pagination from '../components/ui/Pagination';
+import { useOrders, useUpdateOrderStatus } from '../hooks/useSupabase';
 import { useToast } from '../hooks/useToast';
 import { formatCurrency } from '../utils/formatters';
 import type { Order } from '../types';
@@ -26,39 +26,32 @@ export default function Orders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
 
-  const { fetchOrders, updateOrder } = useSupabase();
+  const { data: allOrders = [], isLoading } = useOrders();
+  const updateOrderStatus = useUpdateOrderStatus();
   const { showToast } = useToast();
 
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    loadOrders();
-  }, [currentPage, searchTerm, statusFilter, brandFilter]);
+  const filteredOrders = allOrders.filter(order => {
+    const matchesSearch = !searchTerm || 
+      order.order_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customer?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = !statusFilter || order.status === statusFilter;
+    const matchesBrand = !brandFilter || order.brand === brandFilter;
+    
+    return matchesSearch && matchesStatus && matchesBrand;
+  });
 
-  const loadOrders = async () => {
-    setLoading(true);
-    try {
-      const { data, total } = await fetchOrders({
-        page: currentPage,
-        limit: itemsPerPage,
-        search: searchTerm,
-        status: statusFilter,
-        brand: brandFilter
-      });
-      setOrders(data);
-      setTotalPages(Math.ceil(total / itemsPerPage));
-    } catch (error) {
-      showToast('Erro ao carregar pedidos', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const orders = filteredOrders.slice(startIndex, startIndex + itemsPerPage);
 
-  const handleUpdateOrder = async (orderId: string, updates: Partial<Order>) => {
+  const handleUpdateOrder = async (orderId: string, status: string) => {
     try {
-      await updateOrder(orderId, updates);
+      await updateOrderStatus.mutateAsync({ orderId, status });
       showToast('Pedido atualizado com sucesso!', 'success');
-      loadOrders();
     } catch (error) {
       showToast('Erro ao atualizar pedido', 'error');
     }
@@ -87,14 +80,14 @@ export default function Orders() {
     setSelectedOrder(null);
   };
 
-  const totalRevenue = orders
+  const totalRevenue = allOrders
     .filter(order => order.status !== 'CANCELED')
     .reduce((sum, order) => sum + (order.amount || 0), 0);
 
-  const shippedOrders = orders.filter(order => order.status === 'SHIPPED' || order.status === 'DELIVERED').length;
-  const pendingOrders = orders.filter(order => order.status === 'PENDING').length;
+  const shippedOrders = allOrders.filter(order => order.status === 'SHIPPED' || order.status === 'DELIVERED').length;
+  const pendingOrders = allOrders.filter(order => order.status === 'PENDING').length;
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <LoadingSpinner size="lg" />
@@ -121,7 +114,7 @@ export default function Orders() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total de Pedidos</p>
-              <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{allOrders.length}</p>
             </div>
             <Package className="w-8 h-8 text-blue-600" />
           </div>
@@ -169,26 +162,31 @@ export default function Orders() {
           </div>
           <Select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+           onChange={setStatusFilter}
+           options={[
+             { value: '', label: 'Todos os status' },
+             { value: 'PENDING', label: 'Pendente' },
+             { value: 'PROCESSING', label: 'Processando' },
+             { value: 'SHIPPED', label: 'Enviado' },
+             { value: 'DELIVERED', label: 'Entregue' },
+             { value: 'CANCELED', label: 'Cancelado' }
+           ]}
           >
-            <option value="">Todos os status</option>
-            <option value="PENDING">Pendente</option>
-            <option value="PROCESSING">Processando</option>
-            <option value="SHIPPED">Enviado</option>
-            <option value="DELIVERED">Entregue</option>
-            <option value="CANCELED">Cancelado</option>
           </Select>
           <Select
             value={brandFilter}
-            onChange={(e) => setBrandFilter(e.target.value)}
+           onChange={setBrandFilter}
+           options={[
+             { value: '', label: 'Todas as marcas' },
+             ...Array.from(new Set(allOrders.map(order => order.brand).filter(Boolean))).map(brand => ({
+               value: brand!,
+               label: brand!
+             }))
+           ]}
           >
-            <option value="">Todas as marcas</option>
-            {Array.from(new Set(orders.map(order => order.brand).filter(Boolean))).map(brand => (
-              <option key={brand} value={brand}>{brand}</option>
-            ))}
           </Select>
           <Button
-            variant="outline"
+           variant="secondary"
             onClick={() => {
               setSearchTerm('');
               setStatusFilter('');
@@ -204,52 +202,52 @@ export default function Orders() {
       <Card>
         <div className="overflow-x-auto">
           <Table>
-            <thead>
-              <tr>
-                <th>ID do Pedido</th>
-                <th>Cliente</th>
-                <th>Edição</th>
-                <th>Marca</th>
-                <th>Valor</th>
-                <th>Status</th>
-                <th>Rastreamento</th>
-                <th>Data</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID do Pedido</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Edição</TableHead>
+                <TableHead>Marca</TableHead>
+                <TableHead>Valor</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Rastreamento</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {orders.map((order) => (
-                <tr key={order.order_id}>
-                  <td>
+                <TableRow key={order.order_id}>
+                  <TableCell>
                     <span className="font-mono text-sm text-gray-900">
                       {order.order_id.slice(0, 8)}...
                     </span>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <div className="text-sm text-gray-900">
                       {order.customer?.name || 'Cliente não encontrado'}
                     </div>
                     <div className="text-xs text-gray-500">
                       {order.customer?.email}
                     </div>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <span className="text-sm text-gray-900">
-                      {order.edition_info?.edition || 'N/A'}
+                      {order.edition_data?.edition || 'N/A'}
                     </span>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <span className="text-sm text-gray-900">{order.brand || 'N/A'}</span>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <span className="font-medium text-gray-900">
                       {formatCurrency(order.amount || 0)}
                     </span>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     {getStatusBadge(order.status)}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     {order.tracking_code ? (
                       <div className="text-sm">
                         <div className="font-mono text-gray-900">{order.tracking_code}</div>
@@ -267,13 +265,13 @@ export default function Orders() {
                     ) : (
                       <span className="text-gray-400">N/A</span>
                     )}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <span className="text-sm text-gray-900">
                       {new Date(order.created_at).toLocaleDateString('pt-BR')}
                     </span>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center space-x-2">
                       <Button
                         variant="ghost"
@@ -284,10 +282,10 @@ export default function Orders() {
                         <Eye className="w-4 h-4" />
                       </Button>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
+            </TableBody>
           </Table>
         </div>
 
@@ -297,19 +295,18 @@ export default function Orders() {
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredOrders.length}
           />
         </div>
       </Card>
 
       {/* Order Details Modal */}
-      {selectedOrder && (
-        <OrderDetailsModal
-          isOpen={showOrderDetails}
-          onClose={closeOrderDetails}
-          order={selectedOrder}
-          onUpdate={handleUpdateOrder}
-        />
-      )}
+      <OrderDetailsModal
+        isOpen={showOrderDetails}
+        onClose={closeOrderDetails}
+        order={selectedOrder}
+      />
     </div>
   );
 }

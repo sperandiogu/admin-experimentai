@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { Plus, Search, Edit, Trash2, Package } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Table } from '../components/ui/Table';
-import { Modal } from '../components/ui/Modal';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { Pagination } from '../components/ui/Pagination';
-import { ConfirmDialog } from '../components/ui/ConfirmDialog';
-import { ProductForm } from '../components/forms/ProductForm';
+import Input from '../components/ui/Input';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/Table';
+import Modal from '../components/ui/Modal';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import Pagination from '../components/ui/Pagination';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import ProductForm from '../components/forms/ProductForm';
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from '../hooks/useSupabase';
 import { useToast } from '../hooks/useToast';
 import { Product } from '../types';
@@ -56,9 +56,9 @@ export default function Products() {
     if (!editingProduct) return;
     
     try {
-      await updateProduct.mutateAsync({ 
-        id: editingProduct.id, 
-        updates: productData 
+      await updateProduct.mutateAsync({
+        id: editingProduct.id,
+        ...productData
       });
       setIsModalOpen(false);
       setEditingProduct(null);
@@ -191,19 +191,19 @@ export default function Products() {
       <Card>
         <div className="overflow-x-auto">
           <Table>
-            <thead>
-              <tr>
-                <th className="text-left">Produto</th>
-                <th className="text-left">Marca</th>
-                <th className="text-left">Categoria</th>
-                <th className="text-left">Descrição</th>
-                <th className="text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-left">Produto</TableHead>
+                <TableHead className="text-left">Marca</TableHead>
+                <TableHead className="text-left">Categoria</TableHead>
+                <TableHead className="text-left">Descrição</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {paginatedProducts.map((product) => (
-                <tr key={product.id}>
-                  <td>
+                <TableRow key={product.id}>
+                  <TableCell>
                     <div className="flex items-center space-x-3">
                       {product.image_url ? (
                         <img
@@ -223,23 +223,23 @@ export default function Products() {
                         )}
                       </div>
                     </div>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <span className="text-gray-900">{product.brand || '-'}</span>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     {product.category && (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {product.category}
                       </span>
                     )}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <p className="text-gray-600 max-w-xs truncate">
                       {product.description || '-'}
                     </p>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center justify-end space-x-2">
                       <Button
                         variant="ghost"
@@ -257,10 +257,10 @@ export default function Products() {
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
+            </TableBody>
           </Table>
         </div>
 
@@ -291,6 +291,8 @@ export default function Products() {
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={filteredProducts.length}
             />
           </div>
         )}
@@ -305,9 +307,8 @@ export default function Products() {
       >
         <ProductForm
           product={editingProduct}
-          onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct}
+          onSuccess={editingProduct ? handleUpdateProduct : handleCreateProduct}
           onCancel={closeModal}
-          isLoading={createProduct.isPending || updateProduct.isPending}
         />
       </Modal>
 
@@ -319,7 +320,6 @@ export default function Products() {
         title="Excluir Produto"
         message={`Tem certeza que deseja excluir o produto "${deleteConfirm.product?.name}"? Esta ação não pode ser desfeita.`}
         confirmText="Excluir"
-        isLoading={deleteProduct.isPending}
       />
     </div>
   );

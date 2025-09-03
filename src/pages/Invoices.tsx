@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Search, FileText, DollarSign, CreditCard, ExternalLink, Filter } from 'lucide-react';
 import Card from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
-import { Table } from '../components/ui/Table';
+import Input from '../components/ui/Input';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/Table';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
-import { Select } from '../components/ui/Select';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { Pagination } from '../components/ui/Pagination';
-import { useSupabase } from '../hooks/useSupabase';
+import Select from '../components/ui/Select';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import Pagination from '../components/ui/Pagination';
+import { useInvoices } from '../hooks/useSupabase';
 import { useToast } from '../hooks/useToast';
 import { formatCurrency } from '../utils/formatters';
 import type { Invoice } from '../types';
@@ -22,33 +22,26 @@ export default function Invoices() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const { fetchInvoices } = useSupabase();
+  const { data: allInvoices = [], isLoading } = useInvoices();
   const { showToast } = useToast();
 
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    loadInvoices();
-  }, [currentPage, searchTerm, statusFilter, paymentMethodFilter]);
+  const filteredInvoices = allInvoices.filter(invoice => {
+    const matchesSearch = !searchTerm || 
+      invoice.invoice_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.customer?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = !statusFilter || invoice.status === statusFilter;
+    const matchesPaymentMethod = !paymentMethodFilter || invoice.payment_method === paymentMethodFilter;
+    
+    return matchesSearch && matchesStatus && matchesPaymentMethod;
+  });
 
-  const loadInvoices = async () => {
-    setLoading(true);
-    try {
-      const { data, total } = await fetchInvoices({
-        page: currentPage,
-        limit: itemsPerPage,
-        search: searchTerm,
-        status: statusFilter,
-        paymentMethod: paymentMethodFilter
-      });
-      setInvoices(data);
-      setTotalPages(Math.ceil(total / itemsPerPage));
-    } catch (error) {
-      showToast('Erro ao carregar faturas', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const invoices = filteredInvoices.slice(startIndex, startIndex + itemsPerPage);
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -72,15 +65,15 @@ export default function Invoices() {
     return methodMap[method as keyof typeof methodMap] || method;
   };
 
-  const totalRevenue = invoices
+  const totalRevenue = allInvoices
     .filter(invoice => invoice.status === 'paid')
     .reduce((sum, invoice) => sum + (invoice.amount || 0), 0);
 
-  const pendingAmount = invoices
+  const pendingAmount = allInvoices
     .filter(invoice => invoice.status === 'pending')
     .reduce((sum, invoice) => sum + (invoice.amount || 0), 0);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <LoadingSpinner size="lg" />
@@ -107,7 +100,7 @@ export default function Invoices() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total de Faturas</p>
-              <p className="text-2xl font-bold text-gray-900">{invoices.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{allInvoices.length}</p>
             </div>
             <FileText className="w-8 h-8 text-blue-600" />
           </div>
@@ -135,7 +128,7 @@ export default function Invoices() {
             <div>
               <p className="text-sm font-medium text-gray-600">Taxa de Conversão</p>
               <p className="text-2xl font-bold text-purple-600">
-                {invoices.length > 0 ? Math.round((invoices.filter(i => i.status === 'paid').length / invoices.length) * 100) : 0}%
+                {allInvoices.length > 0 ? Math.round((allInvoices.filter(i => i.status === 'paid').length / allInvoices.length) * 100) : 0}%
               </p>
             </div>
             <Filter className="w-8 h-8 text-purple-600" />
@@ -157,26 +150,30 @@ export default function Invoices() {
           </div>
           <Select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={setStatusFilter}
+            options={[
+              { value: '', label: 'Todos os status' },
+              { value: 'paid', label: 'Pago' },
+              { value: 'pending', label: 'Pendente' },
+              { value: 'failed', label: 'Falhou' },
+              { value: 'canceled', label: 'Cancelado' }
+            ]}
           >
-            <option value="">Todos os status</option>
-            <option value="paid">Pago</option>
-            <option value="pending">Pendente</option>
-            <option value="failed">Falhou</option>
-            <option value="canceled">Cancelado</option>
           </Select>
           <Select
             value={paymentMethodFilter}
-            onChange={(e) => setPaymentMethodFilter(e.target.value)}
+            onChange={setPaymentMethodFilter}
+            options={[
+              { value: '', label: 'Todos os métodos' },
+              { value: 'card', label: 'Cartão' },
+              { value: 'pix', label: 'PIX' },
+              { value: 'boleto', label: 'Boleto' },
+              { value: 'bank_transfer', label: 'Transferência' }
+            ]}
           >
-            <option value="">Todos os métodos</option>
-            <option value="card">Cartão</option>
-            <option value="pix">PIX</option>
-            <option value="boleto">Boleto</option>
-            <option value="bank_transfer">Transferência</option>
           </Select>
           <Button
-            variant="outline"
+            variant="secondary"
             onClick={() => {
               setSearchTerm('');
               setStatusFilter('');
@@ -192,60 +189,60 @@ export default function Invoices() {
       <Card>
         <div className="overflow-x-auto">
           <Table>
-            <thead>
-              <tr>
-                <th>ID da Fatura</th>
-                <th>Cliente</th>
-                <th>Valor</th>
-                <th>Status</th>
-                <th>Método de Pagamento</th>
-                <th>Cartão</th>
-                <th>Data</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID da Fatura</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Valor</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Método de Pagamento</TableHead>
+                <TableHead>Cartão</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {invoices.map((invoice) => (
-                <tr key={invoice.invoice_id}>
-                  <td>
+                <TableRow key={invoice.invoice_id}>
+                  <TableCell>
                     <span className="font-mono text-sm text-gray-900">
                       {invoice.invoice_id.slice(0, 8)}...
                     </span>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <div className="text-sm text-gray-900">
                       {invoice.customer?.name || 'Cliente não encontrado'}
                     </div>
                     <div className="text-xs text-gray-500">
                       {invoice.customer?.email}
                     </div>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <span className="font-medium text-gray-900">
                       {formatCurrency(invoice.amount || 0)}
                     </span>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     {getStatusBadge(invoice.status || 'pending')}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <span className="text-sm text-gray-900">
                       {getPaymentMethodLabel(invoice.payment_method || '')}
                     </span>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     {invoice.last_card_number && (
                       <span className="text-sm text-gray-900">
                         **** {invoice.last_card_number}
                       </span>
                     )}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <span className="text-sm text-gray-900">
                       {new Date(invoice.created_at).toLocaleDateString('pt-BR')}
                     </span>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center space-x-2">
                       {invoice.invoice_link && (
                         <Button
@@ -258,10 +255,10 @@ export default function Invoices() {
                         </Button>
                       )}
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
+            </TableBody>
           </Table>
         </div>
 
@@ -271,6 +268,8 @@ export default function Invoices() {
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredInvoices.length}
           />
         </div>
       </Card>
