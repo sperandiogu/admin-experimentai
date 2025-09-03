@@ -87,6 +87,7 @@ export default function Boxes() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
+          <div className="p-6">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-purple-100 rounded-lg">
               <Package className="w-6 h-6 text-purple-600" />
@@ -96,9 +97,11 @@ export default function Boxes() {
               <p className="text-2xl font-bold text-gray-900">{boxes?.length || 0}</p>
             </div>
           </div>
+          </div>
         </Card>
 
         <Card>
+          <div className="p-6">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-blue-100 rounded-lg">
               <Package className="w-6 h-6 text-blue-600" />
@@ -109,6 +112,7 @@ export default function Boxes() {
                 {boxes?.[0]?.theme || 'Nenhuma'}
               </p>
             </div>
+          </div>
           </div>
         </Card>
       </div>
