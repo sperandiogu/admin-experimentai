@@ -69,7 +69,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="space-y-6 w-full max-w-full">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Configurações</h1>
@@ -95,8 +95,8 @@ export default function Settings() {
         </div>
 
         {webhooks && webhooks.length > 0 ? (
-          <div className="w-full max-w-full overflow-x-auto">
-            <Table className="min-w-[600px]">
+          <div className="overflow-x-auto">
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>URL</TableHead>

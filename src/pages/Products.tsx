@@ -136,11 +136,7 @@ export default function Products() {
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600">Preço Médio</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {products?.length ? formatPrice(
-                  products.reduce((sum, p) => sum + (p.price || 0), 0) / products.length
-                ) : 'R$ 0,00'}
-              </p>
+              <p className="text-2xl font-bold text-gray-900">R$ 0,00</p>
             </div>
           </div>
         </Card>
@@ -165,7 +161,7 @@ export default function Products() {
             <div>
               <p className="text-sm font-medium text-gray-600">Ativos</p>
               <p className="text-2xl font-bold text-gray-900">
-                {products?.filter(p => p.active !== false).length || 0}
+                {products?.length || 0}
               </p>
             </div>
           </div>
@@ -187,7 +183,7 @@ export default function Products() {
           </TableHeader>
           <TableBody>
             {filteredProducts.map((product) => (
-              <TableRow key={product.product_id}>
+              <TableRow key={product.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-blue-100 rounded-lg">
@@ -213,21 +209,11 @@ export default function Products() {
                   )}
                 </TableCell>
                 <TableCell>
-                  {product.price ? (
-                    <span className="font-medium text-gray-900">
-                      {formatPrice(product.price)}
-                    </span>
-                  ) : (
-                    <span className="text-gray-400">Não informado</span>
-                  )}
+                  <span className="text-gray-400">Não informado</span>
                 </TableCell>
                 <TableCell>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    product.active !== false
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {product.active !== false ? 'Ativo' : 'Inativo'}
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Ativo
                   </span>
                 </TableCell>
                 <TableCell>
@@ -245,7 +231,7 @@ export default function Products() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDelete(product.product_id)}
+                      onClick={() => handleDelete(product.id)}
                     >
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </Button>

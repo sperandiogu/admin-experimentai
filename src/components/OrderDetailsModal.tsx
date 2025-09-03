@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, User, Calendar, CreditCard, Truck, MapPin } from 'lucide-react';
+import { Package, Users, Calendar, CreditCard, Truck, MapPin } from 'lucide-react';
 import Modal from './ui/Modal';
 import Badge from './ui/Badge';
 import { format } from 'date-fns';
@@ -60,7 +60,7 @@ export default function OrderDetailsModal({ order, isOpen, onClose }: OrderDetai
         {/* Customer Information */}
         <div className="bg-gray-50 p-4 rounded-lg">
           <div className="flex items-center gap-2 mb-3">
-            <User className="w-5 h-5 text-gray-600" />
+            <Users className="w-5 h-5 text-gray-600" />
             <h3 className="font-semibold text-gray-900">Informações do Cliente</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

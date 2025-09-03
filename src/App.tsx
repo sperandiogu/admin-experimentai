@@ -52,7 +52,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-gray-50 flex overflow-x-hidden">
+      <div className="h-screen bg-gray-50 flex overflow-hidden">
         {/* Sidebar fixa no lado esquerdo */}
         <Sidebar
           currentPage={currentPage}
@@ -63,13 +63,13 @@ function App() {
 
         {/* Conteúdo principal */}
         <div
-          className="flex-1 flex flex-col transition-all duration-300"
+          className="flex-1 flex flex-col transition-all duration-300 overflow-hidden"
           style={{ marginLeft: sidebarOpen ? 256 : 0 }}
         >
           <Header setSidebarOpen={setSidebarOpen} />
 
-          <main className="py-8 px-4 sm:px-6 lg:px-8 w-full max-w-full">
-            <div className="w-full max-w-full mx-auto overflow-x-auto">
+          <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 overflow-auto">
+            <div className="w-full max-w-full mx-auto">
               {renderPage()}
             </div>
           </main>

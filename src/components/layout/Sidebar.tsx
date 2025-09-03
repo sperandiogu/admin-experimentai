@@ -45,11 +45,11 @@ export default function Sidebar({ currentPage, setCurrentPage, isOpen, setIsOpen
 
       {/* Sidebar */}
       <div className={`
-        fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out
+        fixed top-0 left-0 z-50 h-screen w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out
         lg:translate-x-0 lg:static lg:inset-0
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div className="flex h-full flex-col">
+        <div className="flex h-screen flex-col">
           {/* Header */}
           <div className="flex h-16 items-center justify-between px-6 border-b border-gray-200">
             <div className="flex items-center gap-3">
