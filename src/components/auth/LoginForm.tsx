@@ -5,9 +5,10 @@ import Button from '../ui/Button';
 import Card from '../ui/Card';
 
 export default function LoginForm() {
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, signInWithGoogleRedirect } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showRedirectOption, setShowRedirectOption] = useState(false);
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -16,8 +17,26 @@ export default function LoginForm() {
     try {
       await signInWithGoogle();
     } catch (err: any) {
-      setError(err.message || 'Erro ao fazer login com Google');
+      if (err.message === 'POPUP_BLOCKED') {
+        setShowRedirectOption(true);
+        setError('Popup bloqueado pelo navegador. Use a opção alternativa abaixo.');
+      } else {
+        setError(err.message || 'Erro ao fazer login com Google');
+      }
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleRedirect = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      await signInWithGoogleRedirect();
+      // Redirect will happen, no need to handle success here
+    } catch (err: any) {
+      setError(err.message || 'Erro ao fazer login com Google');
       setLoading(false);
     }
   };
@@ -54,8 +73,14 @@ export default function LoginForm() {
 
             {/* Error Message */}
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-800 text-sm">{error}</p>
+              <div className={`mb-6 p-4 border rounded-lg ${
+                showRedirectOption 
+                  ? 'bg-yellow-50 border-yellow-200' 
+                  : 'bg-red-50 border-red-200'
+              }`}>
+                <p className={`text-sm ${
+                  showRedirectOption ? 'text-yellow-800' : 'text-red-800'
+                }`}>{error}</p>
               </div>
             )}
 
@@ -76,6 +101,24 @@ export default function LoginForm() {
                   {loading ? 'Conectando...' : 'Entrar com Google'}
                 </span>
               </Button>
+
+              {/* Alternative redirect button when popup is blocked */}
+              {showRedirectOption && (
+                <Button
+                  onClick={handleGoogleRedirect}
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-3 py-4 bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
+                >
+                  {loading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Chrome className="w-5 h-5" />
+                  )}
+                  <span className="font-medium">
+                    {loading ? 'Redirecionando...' : 'Entrar com Google (Redirecionamento)'}
+                  </span>
+                </Button>
+              )}
 
               <div className="text-center">
                 <p className="text-xs text-gray-500">
