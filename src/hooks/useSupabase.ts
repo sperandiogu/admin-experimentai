@@ -7,8 +7,9 @@ export function useCustomers() {
   return useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Não autenticado');
+      // Verificar se há usuário logado
+      const savedUser = localStorage.getItem('admin_user');
+      if (!savedUser) throw new Error('Não autenticado');
       
       const { data, error } = await supabase
         .from('customer')
@@ -26,8 +27,9 @@ export function useProducts() {
   return useQuery({
     queryKey: ['products'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Não autenticado');
+      // Verificar se há usuário logado
+      const savedUser = localStorage.getItem('admin_user');
+      if (!savedUser) throw new Error('Não autenticado');
       
       const { data, error } = await supabase
         .from('products')
@@ -45,8 +47,9 @@ export function useEditions() {
   return useQuery({
     queryKey: ['editions'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Não autenticado');
+      // Verificar se há usuário logado
+      const savedUser = localStorage.getItem('admin_user');
+      if (!savedUser) throw new Error('Não autenticado');
       
       const { data, error } = await supabase
         .from('edition')
@@ -64,8 +67,9 @@ export function useBoxes() {
   return useQuery({
     queryKey: ['boxes'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Não autenticado');
+      // Verificar se há usuário logado
+      const savedUser = localStorage.getItem('admin_user');
+      if (!savedUser) throw new Error('Não autenticado');
       
       const { data, error } = await supabase
         .from('boxes')
@@ -115,8 +119,9 @@ export function useOrders() {
   return useQuery({
     queryKey: ['orders'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Não autenticado');
+      // Verificar se há usuário logado
+      const savedUser = localStorage.getItem('admin_user');
+      if (!savedUser) throw new Error('Não autenticado');
       
       const { data, error } = await supabase
         .from('order')
@@ -139,8 +144,9 @@ export function useInvoices() {
   return useQuery({
     queryKey: ['invoices'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Não autenticado');
+      // Verificar se há usuário logado
+      const savedUser = localStorage.getItem('admin_user');
+      if (!savedUser) throw new Error('Não autenticado');
       
       const { data, error } = await supabase
         .from('invoice')
@@ -161,8 +167,9 @@ export function useDashboardStats() {
   return useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Não autenticado');
+      // Verificar se há usuário logado
+      const savedUser = localStorage.getItem('admin_user');
+      if (!savedUser) throw new Error('Não autenticado');
       
       const [customers, orders, invoices, products] = await Promise.all([
         supabase.from('customer').select('*', { count: 'exact' }),

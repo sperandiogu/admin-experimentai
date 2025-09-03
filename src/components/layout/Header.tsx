@@ -48,7 +48,7 @@ export default function Header({ setSidebarOpen }: HeaderProps) {
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <div className="text-sm font-medium text-gray-900">
-                {user?.email?.split('@')[0] || 'Administrador'}
+                {user?.name || 'Administrador'}
               </div>
               <div className="text-xs text-gray-500">{user?.email}</div>
             </div>

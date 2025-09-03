@@ -1,10 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+}
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
@@ -13,69 +17,90 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Usuários pré-definidos (em produção, isso viria de uma API)
+const ADMIN_USERS = [
+  {
+    id: '1',
+    email: 'admin@admin.com',
+    password: 'admin123',
+    name: 'Administrador',
+    role: 'admin'
+  }
+];
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    // Verificar se há usuário logado no localStorage
+    const savedUser = localStorage.getItem('admin_user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
+        localStorage.removeItem('admin_user');
+      }
+    }
+    setLoading(false);
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // Simular delay de rede
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    if (error) {
-      throw error;
+    // Verificar credenciais
+    const adminUser = ADMIN_USERS.find(u => u.email === email && u.password === password);
+    
+    if (!adminUser) {
+      throw new Error('Email ou senha incorretos');
     }
+
+    const userSession = {
+      id: adminUser.id,
+      email: adminUser.email,
+      name: adminUser.name,
+      role: adminUser.role
+    };
+
+    // Salvar no localStorage
+    localStorage.setItem('admin_user', JSON.stringify(userSession));
+    setUser(userSession);
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const { error } = await supabase.auth.signUp({
+    // Simular delay de rede
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Verificar se email já existe
+    const existingUser = ADMIN_USERS.find(u => u.email === email);
+    if (existingUser) {
+      throw new Error('Este email já está cadastrado');
+    }
+
+    // Em um sistema real, isso salvaria no banco de dados
+    // Por enquanto, vamos apenas simular sucesso
+    const newUser = {
+      id: Date.now().toString(),
       email,
       password,
-      options: {
-        data: {
-          full_name: fullName,
-          role: 'admin'
-        }
-      }
-    });
+      name: fullName,
+      role: 'admin'
+    };
 
-    if (error) {
-      throw error;
-    }
+    // Adicionar à lista de usuários (temporário)
+    ADMIN_USERS.push(newUser);
+    
+    // Não fazer login automático, apenas confirmar criação
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      throw error;
-    }
+    localStorage.removeItem('admin_user');
+    setUser(null);
   };
 
   const value = {
     user,
-    session,
     loading,
     signIn,
     signUp,
