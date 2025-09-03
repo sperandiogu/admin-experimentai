@@ -1,11 +1,23 @@
 import React from 'react';
-import { Menu, Bell, Search, User } from 'lucide-react';
+import { Menu, Bell, Search, User, LogOut } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import Button from '../ui/Button';
 
 interface HeaderProps {
   setSidebarOpen: (open: boolean) => void;
 }
 
 export default function Header({ setSidebarOpen }: HeaderProps) {
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
+
   return (
     <header className="bg-white border-b border-gray-200">
       <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -35,11 +47,23 @@ export default function Header({ setSidebarOpen }: HeaderProps) {
           
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
-              <div className="text-sm font-medium text-gray-900">Administrador</div>
-              <div className="text-xs text-gray-500">Administrador</div>
+              <div className="text-sm font-medium text-gray-900">
+                {user?.email?.split('@')[0] || 'Administrador'}
+              </div>
+              <div className="text-xs text-gray-500">{user?.email}</div>
             </div>
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center cursor-pointer hover:shadow-lg transition-shadow">
-              <User className="w-4 h-4 text-white" />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 text-white" />
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSignOut}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </div>
