@@ -29,8 +29,8 @@ interface TableCellProps {
 
 export function Table({ children }: TableProps) {
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-200">
-      <table className="min-w-full divide-y divide-gray-200">
+    <div className="overflow-x-auto rounded-lg border border-gray-200">
+      <table className="w-full divide-y divide-gray-200">
         {children}
       </table>
     </div>
@@ -66,7 +66,7 @@ export function TableHead({ children, className = '' }: TableHeadProps) {
 
 export function TableCell({ children, className = '' }: TableCellProps) {
   return (
-    <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${className}`}>
+    <td className={`px-6 py-4 text-sm text-gray-900 ${className}`}>
       {children}
     </td>
   );

@@ -114,7 +114,8 @@ export default function Editions() {
       </div>
 
       {/* Editions Table */}
-      <Card>
+      <div className="overflow-x-auto">
+        <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -174,7 +175,8 @@ export default function Editions() {
             ))}
           </TableBody>
         </Table>
-      </Card>
+        </Card>
+      </div>
 
       {filteredEditions.length === 0 && (
         <Card>

@@ -63,8 +63,7 @@ function App() {
 
         {/* Conteúdo principal */}
         <div
-          className="flex-1 flex flex-col transition-all duration-300 overflow-hidden"
-          style={{ marginLeft: sidebarOpen ? 256 : 0 }}
+          className="flex-1 flex flex-col transition-all duration-300 overflow-hidden lg:ml-64"
         >
           <Header setSidebarOpen={setSidebarOpen} />
 

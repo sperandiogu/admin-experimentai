@@ -169,7 +169,8 @@ export default function Products() {
       </div>
 
       {/* Products Table */}
-      <Card>
+      <div className="overflow-x-auto">
+        <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -241,7 +242,8 @@ export default function Products() {
             ))}
           </TableBody>
         </Table>
-      </Card>
+        </Card>
+      </div>
 
       {filteredProducts.length === 0 && (
         <Card>

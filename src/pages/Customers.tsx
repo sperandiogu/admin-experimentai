@@ -123,7 +123,8 @@ export default function Customers() {
       </div>
 
       {/* Customers Table */}
-      <Card>
+      <div className="overflow-x-auto">
+        <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -194,7 +195,8 @@ export default function Customers() {
             ))}
           </TableBody>
         </Table>
-      </Card>
+        </Card>
+      </div>
 
       {filteredCustomers.length === 0 && (
         <Card>

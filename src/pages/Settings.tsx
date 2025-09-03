@@ -95,7 +95,6 @@ export default function Settings() {
         </div>
 
         {webhooks && webhooks.length > 0 ? (
-          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -136,7 +135,6 @@ export default function Settings() {
                 ))}
               </TableBody>
             </Table>
-          </div>
         ) : (
           <div className="text-center py-8">
             <Webhook className="w-12 h-12 text-gray-400 mx-auto mb-4" />

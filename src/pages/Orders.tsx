@@ -162,7 +162,8 @@ export default function Orders() {
       </div>
 
       {/* Orders Table */}
-      <Card>
+      <div className="overflow-x-auto">
+        <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -254,7 +255,8 @@ export default function Orders() {
             ))}
           </TableBody>
         </Table>
-      </Card>
+        </Card>
+      </div>
 
       {filteredOrders.length === 0 && (
         <Card>

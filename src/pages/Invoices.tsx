@@ -124,7 +124,8 @@ export default function Invoices() {
       </div>
 
       {/* Invoices Table */}
-      <Card>
+      <div className="overflow-x-auto">
+        <Card>
         <Table>
           <TableHeader>
             <TableRow>
@@ -196,7 +197,8 @@ export default function Invoices() {
             ))}
           </TableBody>
         </Table>
-      </Card>
+        </Card>
+      </div>
 
       {filteredInvoices.length === 0 && (
         <Card>
