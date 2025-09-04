@@ -7,6 +7,7 @@ import {
   ShoppingCart, 
   FileText,
   Box,
+  MessageSquare,
   Settings,
   X
 } from 'lucide-react';
@@ -27,6 +28,7 @@ const navigation = [
   { name: 'Edições', icon: Calendar, page: 'editions' as Page },
   { name: 'Pedidos', icon: ShoppingCart, page: 'orders' as Page },
   { name: 'Faturas', icon: FileText, page: 'invoices' as Page },
+  { name: 'Feedbacks', icon: MessageSquare, page: 'feedbacks' as Page },
   { name: 'Configurações', icon: Settings, page: 'settings' as Page },
 ];
 

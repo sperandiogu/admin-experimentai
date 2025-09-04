@@ -196,6 +196,90 @@ export type Database = {
           product_id?: string;
         };
       };
+      question_categories: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string;
+          updated_at?: string;
+        };
+      };
+      question_options: {
+        Row: {
+          id: string;
+          question_id: string;
+          option_text: string;
+          option_value: number;
+          order_index: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          question_id: string;
+          option_text: string;
+          option_value: number;
+          order_index: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          question_id?: string;
+          option_text?: string;
+          option_value?: number;
+          order_index?: number;
+        };
+      };
+      questions: {
+        Row: {
+          id: string;
+          category_id: string;
+          product_id: string | null;
+          question_text: string;
+          question_type: string;
+          is_required: boolean;
+          order_index: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          category_id: string;
+          product_id?: string;
+          question_text: string;
+          question_type: string;
+          is_required?: boolean;
+          order_index: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          category_id?: string;
+          product_id?: string;
+          question_text?: string;
+          question_type?: string;
+          is_required?: boolean;
+          order_index?: number;
+          is_active?: boolean;
+          updated_at?: string;
+        };
+      };
     };
   };
 };

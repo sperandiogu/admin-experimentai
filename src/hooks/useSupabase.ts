@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import type { Customer, Product, Edition, Box, Order, Invoice, ProductEdition, WebhookConfig } from '../types';
+import type { Customer, Product, Edition, Box, Order, Invoice, ProductEdition, WebhookConfig, Question, QuestionCategory, QuestionOption } from '../types';
 
 // Customers
 export function useCustomers() {
@@ -586,6 +586,259 @@ export function useUpdateInvoiceStatus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    }
+  });
+}
+
+// Questions
+export function useQuestions() {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: ['questions'],
+    queryFn: async () => {
+      if (!user) throw new Error('Não autenticado');
+      
+      const { data, error } = await supabase
+        .from('questions')
+        .select(`
+          *,
+          category:category_id(id, name),
+          product:product_id(id, name, brand),
+          options:question_options(*)
+        `)
+        .order('order_index', { ascending: true });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+}
+
+// Question Categories
+export function useQuestionCategories() {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: ['question-categories'],
+    queryFn: async () => {
+      if (!user) throw new Error('Não autenticado');
+      
+      const { data, error } = await supabase
+        .from('question_categories')
+        .select('*')
+        .order('name', { ascending: true });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+}
+
+// Question Options
+export function useQuestionOptions(questionId: string) {
+  return useQuery({
+    queryKey: ['question-options', questionId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('question_options')
+        .select('*')
+        .eq('question_id', questionId)
+        .order('order_index', { ascending: true });
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!questionId
+  });
+}
+
+// Question mutations
+export function useCreateQuestion() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (question: Omit<Question, 'id' | 'created_at' | 'updated_at'>) => {
+      const { data, error } = await supabase
+        .from('questions')
+        .insert(question)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+    }
+  });
+}
+
+export function useUpdateQuestion() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (question: Partial<Question> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('questions')
+        .update({ ...question, updated_at: new Date().toISOString() })
+        .eq('id', question.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+    }
+  });
+}
+
+export function useDeleteQuestion() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (questionId: string) => {
+      // First delete options
+      await supabase
+        .from('question_options')
+        .delete()
+        .eq('question_id', questionId);
+      
+      // Then delete question
+      const { error } = await supabase
+        .from('questions')
+        .delete()
+        .eq('id', questionId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+    }
+  });
+}
+
+// Category mutations
+export function useCreateQuestionCategory() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (category: Omit<QuestionCategory, 'id' | 'created_at' | 'updated_at'>) => {
+      const { data, error } = await supabase
+        .from('question_categories')
+        .insert(category)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['question-categories'] });
+    }
+  });
+}
+
+export function useUpdateQuestionCategory() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (category: Partial<QuestionCategory> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('question_categories')
+        .update({ ...category, updated_at: new Date().toISOString() })
+        .eq('id', category.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['question-categories'] });
+    }
+  });
+}
+
+export function useDeleteQuestionCategory() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (categoryId: string) => {
+      const { error } = await supabase
+        .from('question_categories')
+        .delete()
+        .eq('id', categoryId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['question-categories'] });
+    }
+  });
+}
+
+// Option mutations
+export function useCreateQuestionOption() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (option: Omit<QuestionOption, 'id' | 'created_at'>) => {
+      const { data, error } = await supabase
+        .from('question_options')
+        .insert(option)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['question-options', variables.question_id] });
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+    }
+  });
+}
+
+export function useUpdateQuestionOption() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (option: Partial<QuestionOption> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('question_options')
+        .update(option)
+        .eq('id', option.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['question-options', data.question_id] });
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+    }
+  });
+}
+
+export function useDeleteQuestionOption() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, questionId }: { id: string; questionId: string }) => {
+      const { error } = await supabase
+        .from('question_options')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['question-options', variables.questionId] });
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
     }
   });
 }

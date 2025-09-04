@@ -14,6 +14,7 @@ import Editions from './pages/Editions';
 import Orders from './pages/Orders';
 import Invoices from './pages/Invoices';
 import Boxes from './pages/Boxes';
+import Feedbacks from './pages/Feedbacks';
 import Settings from './pages/Settings';
 
 export type Page =
@@ -24,6 +25,7 @@ export type Page =
   | 'orders'
   | 'invoices'
   | 'boxes'
+  | 'feedbacks'
   | 'settings';
 
 const queryClient = new QueryClient();
@@ -65,6 +67,8 @@ function AppContent() {
         return <Invoices />;
       case 'boxes':
         return <Boxes />;
+      case 'feedbacks':
+        return <Feedbacks />;
       case 'settings':
         return <Settings />;
       default:
