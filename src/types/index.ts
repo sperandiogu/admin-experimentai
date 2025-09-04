@@ -97,7 +97,7 @@ export interface Question {
   category_id: string;
   product_id?: string;
   question_text: string;
-  question_type: 'multiple_choice' | 'rating' | 'text' | 'yes_no';
+  question_type: 'multiple_choice' | 'emoji_rating' | 'text' | 'boolean';
   is_required: boolean;
   order_index: number;
   is_active: boolean;

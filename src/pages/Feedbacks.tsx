@@ -84,9 +84,9 @@ export default function Feedbacks() {
   const getQuestionTypeLabel = (type: string) => {
     const types = {
       'multiple_choice': 'Múltipla Escolha',
-      'rating': 'Avaliação',
+      'emoji_rating': 'Avaliação',
       'text': 'Texto Livre',
-      'yes_no': 'Sim/Não'
+      'boolean': 'Sim/Não'
     };
     return types[type as keyof typeof types] || type;
   };
@@ -94,9 +94,9 @@ export default function Feedbacks() {
   const getQuestionTypeColor = (type: string) => {
     const colors = {
       'multiple_choice': 'info',
-      'rating': 'warning',
+      'emoji_rating': 'warning',
       'text': 'default',
-      'yes_no': 'success'
+      'boolean': 'success'
     };
     return colors[type as keyof typeof colors] || 'default';
   };

@@ -18,9 +18,9 @@ export default function QuestionDetailsModal({ question, isOpen, onClose }: Ques
   const getQuestionTypeLabel = (type: string) => {
     const types = {
       'multiple_choice': 'Múltipla Escolha',
-      'rating': 'Avaliação',
+      'emoji_rating': 'Avaliação',
       'text': 'Texto Livre',
-      'yes_no': 'Sim/Não'
+      'boolean': 'Sim/Não'
     };
     return types[type as keyof typeof types] || type;
   };
@@ -28,9 +28,9 @@ export default function QuestionDetailsModal({ question, isOpen, onClose }: Ques
   const getQuestionTypeIcon = (type: string) => {
     const icons = {
       'multiple_choice': CheckCircle,
-      'rating': Star,
+      'emoji_rating': Star,
       'text': MessageSquare,
-      'yes_no': CheckCircle
+      'boolean': CheckCircle
     };
     return icons[type as keyof typeof icons] || MessageSquare;
   };
@@ -132,13 +132,13 @@ export default function QuestionDetailsModal({ question, isOpen, onClose }: Ques
             {question.question_type === 'multiple_choice' && (
               <p>Os clientes poderão selecionar uma das opções disponíveis.</p>
             )}
-            {question.question_type === 'rating' && (
+            {question.question_type === 'emoji_rating' && (
               <p>Os clientes avaliarão usando uma escala de valores numéricos.</p>
             )}
             {question.question_type === 'text' && (
               <p>Os clientes poderão escrever uma resposta em texto livre.</p>
             )}
-            {question.question_type === 'yes_no' && (
+            {question.question_type === 'boolean' && (
               <p>Os clientes responderão com Sim ou Não.</p>
             )}
           </div>

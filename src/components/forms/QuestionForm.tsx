@@ -17,9 +17,9 @@ interface QuestionFormProps {
 
 const questionTypeOptions = [
   { value: 'multiple_choice', label: 'Múltipla Escolha' },
-  { value: 'rating', label: 'Avaliação (1-5)' },
+  { value: 'emoji_rating', label: 'Avaliação (1-5)' },
   { value: 'text', label: 'Texto Livre' },
-  { value: 'yes_no', label: 'Sim/Não' }
+  { value: 'boolean', label: 'Sim/Não' }
 ];
 
 export default function QuestionForm({ question, onSuccess, onCancel }: QuestionFormProps) {
@@ -174,7 +174,7 @@ export default function QuestionForm({ question, onSuccess, onCancel }: Question
 
   // Auto-generate rating options when type changes to rating
   useEffect(() => {
-    if (formData.question_type === 'rating' && options.length === 0) {
+    if (formData.question_type === 'emoji_rating' && options.length === 0) {
       setOptions([
         { option_text: 'Muito Ruim', option_value: 1, order_index: 1 },
         { option_text: 'Ruim', option_value: 2, order_index: 2 },
@@ -182,7 +182,7 @@ export default function QuestionForm({ question, onSuccess, onCancel }: Question
         { option_text: 'Bom', option_value: 4, order_index: 4 },
         { option_text: 'Excelente', option_value: 5, order_index: 5 }
       ]);
-    } else if (formData.question_type === 'yes_no' && options.length === 0) {
+    } else if (formData.question_type === 'boolean' && options.length === 0) {
       setOptions([
         { option_text: 'Sim', option_value: 1, order_index: 1 },
         { option_text: 'Não', option_value: 0, order_index: 2 }
@@ -271,7 +271,7 @@ export default function QuestionForm({ question, onSuccess, onCancel }: Question
       </div>
 
       {/* Options Section */}
-      {(formData.question_type === 'multiple_choice' || formData.question_type === 'rating' || formData.question_type === 'yes_no') && (
+      {(formData.question_type === 'multiple_choice' || formData.question_type === 'emoji_rating' || formData.question_type === 'boolean') && (
         <Card>
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
