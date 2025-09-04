@@ -596,6 +596,7 @@ export function useQuestions() {
   
   return useQuery({
     queryKey: ['questions'],
+    enabled: false, // Temporariamente desabilitado até as tabelas serem criadas
     queryFn: async () => {
       if (!user) throw new Error('Não autenticado');
       
@@ -621,6 +622,7 @@ export function useQuestionCategories() {
   
   return useQuery({
     queryKey: ['question-categories'],
+    enabled: false, // Temporariamente desabilitado até as tabelas serem criadas
     queryFn: async () => {
       if (!user) throw new Error('Não autenticado');
       
