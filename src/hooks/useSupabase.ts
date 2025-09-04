@@ -604,7 +604,7 @@ export function useQuestions() {
         .select(`
           *,
           category:category_id(id, name),
-          product:product_id(id, name, brand),
+          product:products(id, name, brand),
           options:question_options(*)
         `)
         .order('order_index', { ascending: true });
