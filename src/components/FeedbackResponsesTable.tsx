@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Eye, User, Package, Calendar, Clock, CheckCircle, AlertCircle, XCircle, Edit, Trash2 } from 'lucide-react';
+import { Search, Eye, User, Package, Calendar, Clock, CheckCircle, AlertCircle, XCircle, CreditCard as Edit, Trash2 } from 'lucide-react';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import Badge from './ui/Badge';
@@ -71,7 +71,7 @@ export default function FeedbackResponsesTable({ onViewDetails }: FeedbackRespon
     isOpen: false,
     session: null
   });
-  
+
   const itemsPerPage = 10;
 
   const filteredSessions = sessions.filter(session => {
@@ -275,13 +275,31 @@ export default function FeedbackResponsesTable({ onViewDetails }: FeedbackRespon
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onViewDetails(session)}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onViewDetails(session)}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditSession(session)}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeleteDialog({ isOpen: true, session })}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -311,6 +329,102 @@ export default function FeedbackResponsesTable({ onViewDetails }: FeedbackRespon
           </div>
         )}
       </Card>
+
+      {/* Edit Session Modal */}
+      <Modal
+        isOpen={!!editingSession}
+        onClose={() => {
+          setEditingSession(null);
+          setEditFormData({
+            session_status: '',
+            user_email: '',
+            completion_badge: '',
+            final_message: ''
+          });
+        }}
+        title={`Editar Sessão #${editingSession?.id?.slice(0, 8)}`}
+        size="md"
+      >
+        {editingSession && (
+          <form onSubmit={handleUpdateSession} className="space-y-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-medium text-gray-900 mb-2">Informações da Sessão</h3>
+              <div className="text-sm text-gray-600">
+                <p>Cliente: {editingSession.customer?.name || 'Visitante'}</p>
+                <p>Email: {editingSession.customer?.email || editingSession.user_email}</p>
+                <p>Iniciado: {format(new Date(editingSession.started_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p>
+              </div>
+            </div>
+
+            <Select
+              label="Status da Sessão"
+              value={editFormData.session_status}
+              onChange={(value) => setEditFormData({ ...editFormData, session_status: value })}
+              options={statusOptions}
+              required
+            />
+
+            <Input
+              label="Email do Usuário"
+              value={editFormData.user_email}
+              onChange={(value) => setEditFormData({ ...editFormData, user_email: value })}
+              placeholder="email@exemplo.com"
+            />
+
+            <Input
+              label="Badge de Conquista"
+              value={editFormData.completion_badge}
+              onChange={(value) => setEditFormData({ ...editFormData, completion_badge: value })}
+              placeholder="Badge especial ou conquista"
+            />
+
+            <Textarea
+              label="Mensagem Final"
+              value={editFormData.final_message}
+              onChange={(value) => setEditFormData({ ...editFormData, final_message: value })}
+              placeholder="Mensagem de agradecimento ou finalização"
+              rows={3}
+            />
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="submit"
+                disabled={updateFeedbackSession.isPending}
+                className="flex-1"
+              >
+                {updateFeedbackSession.isPending ? 'Salvando...' : 'Salvar Alterações'}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setEditingSession(null);
+                  setEditFormData({
+                    session_status: '',
+                    user_email: '',
+                    completion_badge: '',
+                    final_message: ''
+                  });
+                }}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        onClose={() => setDeleteDialog({ isOpen: false, session: null })}
+        onConfirm={handleDeleteSession}
+        title="Excluir Sessão de Feedback"
+        message={`Tem certeza que deseja excluir esta sessão de feedback? Todos os dados associados serão perdidos permanentemente. Esta ação não pode ser desfeita.`}
+        confirmText="Excluir Sessão"
+        cancelText="Cancelar"
+        variant="danger"
+      />
     </div>
   );
 }
