@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import type { Customer, Product, Edition, Box, Order, Invoice, ProductEdition, WebhookConfig, Question, QuestionCategory, QuestionOption } from '../types';
+import type { Customer, Product, Edition, Box, Order, Invoice, ProductEdition, WebhookConfig, Question, QuestionCategory, QuestionOption, FeedbackSession, ProductFeedback, ExperimentaiFeedback, DeliveryFeedback } from '../types';
 
 // Customers
 export function useCustomers() {
@@ -159,6 +159,90 @@ export function useInvoices() {
       
       if (error) throw error;
       return data;
+    }
+  });
+}
+
+// Feedback Sessions
+export function useFeedbackSessions() {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: ['feedback-sessions'],
+    enabled: !!user,
+    queryFn: async () => {
+      if (!user) throw new Error('Não autenticado');
+      
+      const { data, error } = await supabase
+        .from('feedback_sessions')
+        .select(`
+          *,
+          customer:customer_id(customer_id, name, email),
+          box:box_id(id, theme, description),
+          edition:edition_id(edition_id, edition)
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as FeedbackSession[];
+    }
+  });
+}
+
+export function useFeedbackSessionDetails(sessionId: string) {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: ['feedback-session-details', sessionId],
+    enabled: !!user && !!sessionId,
+    queryFn: async () => {
+      if (!user) throw new Error('Não autenticado');
+      if (!sessionId) throw new Error('ID da sessão é obrigatório');
+      
+      // Buscar dados da sessão
+      const { data: session, error: sessionError } = await supabase
+        .from('feedback_sessions')
+        .select(`
+          *,
+          customer:customer_id(customer_id, name, email),
+          box:box_id(id, theme, description),
+          edition:edition_id(edition_id, edition)
+        `)
+        .eq('id', sessionId)
+        .single();
+      
+      if (sessionError) throw sessionError;
+      
+      // Buscar feedbacks dos produtos
+      const { data: productFeedbacks, error: productError } = await supabase
+        .from('product_feedback')
+        .select('*')
+        .eq('feedback_session_id', sessionId);
+      
+      if (productError) throw productError;
+      
+      // Buscar feedback da Experimentai
+      const { data: experimentaiFeedbacks, error: experimentaiError } = await supabase
+        .from('experimentai_feedback')
+        .select('*')
+        .eq('feedback_session_id', sessionId);
+      
+      if (experimentaiError) throw experimentaiError;
+      
+      // Buscar feedback de entrega
+      const { data: deliveryFeedbacks, error: deliveryError } = await supabase
+        .from('delivery_feedback')
+        .select('*')
+        .eq('feedback_session_id', sessionId);
+      
+      if (deliveryError) throw deliveryError;
+      
+      return {
+        session: session as FeedbackSession,
+        productFeedbacks: productFeedbacks as ProductFeedback[],
+        experimentaiFeedbacks: experimentaiFeedbacks as ExperimentaiFeedback[],
+        deliveryFeedbacks: deliveryFeedbacks as DeliveryFeedback[]
+      };
     }
   });
 }

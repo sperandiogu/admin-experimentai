@@ -107,3 +107,53 @@ export interface Question {
   product?: Product;
   options?: QuestionOption[];
 }
+
+export interface FeedbackSession {
+  id: string;
+  customer_id?: string;
+  box_id?: string;
+  user_email?: string;
+  session_status: 'in_progress' | 'completed' | 'abandoned';
+  completion_badge?: string;
+  final_message?: string;
+  ip_address?: string;
+  user_agent?: string;
+  started_at: string;
+  completed_at?: string;
+  created_at: string;
+  updated_at: string;
+  edition_id?: string;
+  customer?: Customer;
+  box?: Box;
+  edition?: Edition;
+}
+
+export interface FeedbackAnswer {
+  question_id: string;
+  question_text: string;
+  question_type: string;
+  answer: any;
+}
+
+export interface ProductFeedback {
+  id: string;
+  feedback_session_id: string;
+  product_id?: string;
+  product_name: string;
+  created_at: string;
+  answers: FeedbackAnswer[];
+}
+
+export interface ExperimentaiFeedback {
+  id: string;
+  feedback_session_id: string;
+  created_at: string;
+  answers: FeedbackAnswer[];
+}
+
+export interface DeliveryFeedback {
+  id: string;
+  feedback_session_id: string;
+  created_at: string;
+  answers: FeedbackAnswer[];
+}

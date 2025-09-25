@@ -60,7 +60,7 @@ export default function QuestionDetailsModal({ question, isOpen, onClose }: Ques
                 </Badge>
                 {question.is_required && (
                   <Badge variant="warning">Obrigatória</Badge>
-                )}
+                <span className="text-sm font-medium text-blue-600">Valor: {option.option_value}</span>
               </div>
             </div>
           </div>

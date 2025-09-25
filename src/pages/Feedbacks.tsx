@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, MessageSquare, Edit, Trash2, Eye, Filter, Package, Tag } from 'lucide-react';
+import { Plus, Search, MessageSquare, Edit, Trash2, Eye, Filter, Package, Tag, Users } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
@@ -8,10 +8,12 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import QuestionForm from '../components/forms/QuestionForm';
 import CategoryForm from '../components/forms/CategoryForm';
 import QuestionDetailsModal from '../components/QuestionDetailsModal';
+import FeedbackResponsesTable from '../components/FeedbackResponsesTable';
+import FeedbackDetailsModal from '../components/FeedbackDetailsModal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useQuestions, useQuestionCategories, useDeleteQuestion, useDeleteQuestionCategory } from '../hooks/useSupabase';
 import { useToast } from '../hooks/useToast';
-import type { Question, QuestionCategory } from '../types';
+import type { Question, QuestionCategory, FeedbackSession } from '../types';
 
 export default function Feedbacks() {
   const { data: questions = [], isLoading: questionsLoading } = useQuestions();
@@ -23,7 +25,7 @@ export default function Feedbacks() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [productFilter, setProductFilter] = useState('');
-  const [activeTab, setActiveTab] = useState<'questions' | 'categories'>('questions');
+  const [activeTab, setActiveTab] = useState<'questions' | 'categories' | 'responses'>('questions');
   
   // Question modals
   const [showQuestionForm, setShowQuestionForm] = useState(false);
@@ -41,6 +43,9 @@ export default function Feedbacks() {
     isOpen: false,
     category: null
   });
+
+  // Feedback responses
+  const [viewingFeedbackSession, setViewingFeedbackSession] = useState<FeedbackSession | null>(null);
 
   const filteredQuestions = questions.filter(question => {
     const matchesSearch = question.question_text.toLowerCase().includes(searchTerm.toLowerCase());
@@ -391,6 +396,10 @@ export default function Feedbacks() {
         </Card>
       )}
 
+      {activeTab === 'responses' && (
+        <FeedbackResponsesTable onViewDetails={setViewingFeedbackSession} />
+      )}
+
       {/* Question Form Modal */}
       <Modal
         isOpen={showQuestionForm}
@@ -442,6 +451,13 @@ export default function Feedbacks() {
         question={viewingQuestion}
         isOpen={!!viewingQuestion}
         onClose={() => setViewingQuestion(null)}
+      />
+
+      {/* Feedback Details Modal */}
+      <FeedbackDetailsModal
+        session={viewingFeedbackSession}
+        isOpen={!!viewingFeedbackSession}
+        onClose={() => setViewingFeedbackSession(null)}
       />
 
       {/* Delete Question Dialog */}
