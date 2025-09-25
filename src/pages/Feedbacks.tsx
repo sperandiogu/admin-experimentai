@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, MessageSquare, Edit, Trash2, Eye, Filter, Package, Tag, Users } from 'lucide-react';
+import { Plus, Search, MessageSquare, CreditCard as Edit, Trash2, Eye, Filter, Package, Tag, Users } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
@@ -25,7 +25,7 @@ export default function Feedbacks() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [productFilter, setProductFilter] = useState('');
-  const [activeTab, setActiveTab] = useState<'questions' | 'categories' | 'responses'>('questions');
+  const [activeTab, setActiveTab] = useState<'questions' | 'categories'>('questions');
   
   // Question modals
   const [showQuestionForm, setShowQuestionForm] = useState(false);
@@ -43,9 +43,6 @@ export default function Feedbacks() {
     isOpen: false,
     category: null
   });
-
-  // Feedback responses
-  const [viewingFeedbackSession, setViewingFeedbackSession] = useState<FeedbackSession | null>(null);
 
   const filteredQuestions = questions.filter(question => {
     const matchesSearch = question.question_text.toLowerCase().includes(searchTerm.toLowerCase());
@@ -396,10 +393,6 @@ export default function Feedbacks() {
         </Card>
       )}
 
-      {activeTab === 'responses' && (
-        <FeedbackResponsesTable onViewDetails={setViewingFeedbackSession} />
-      )}
-
       {/* Question Form Modal */}
       <Modal
         isOpen={showQuestionForm}
@@ -451,13 +444,6 @@ export default function Feedbacks() {
         question={viewingQuestion}
         isOpen={!!viewingQuestion}
         onClose={() => setViewingQuestion(null)}
-      />
-
-      {/* Feedback Details Modal */}
-      <FeedbackDetailsModal
-        session={viewingFeedbackSession}
-        isOpen={!!viewingFeedbackSession}
-        onClose={() => setViewingFeedbackSession(null)}
       />
 
       {/* Delete Question Dialog */}
