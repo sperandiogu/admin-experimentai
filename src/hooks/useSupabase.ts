@@ -942,3 +942,51 @@ export function useDeleteQuestionOption() {
     }
   });
 }
+
+// Feedback session mutations
+export function useDeleteFeedbackSession() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (sessionId: string) => {
+      // Delete related feedbacks first
+      await Promise.all([
+        supabase.from('product_feedback').delete().eq('feedback_session_id', sessionId),
+        supabase.from('experimentai_feedback').delete().eq('feedback_session_id', sessionId),
+        supabase.from('delivery_feedback').delete().eq('feedback_session_id', sessionId)
+      ]);
+      
+      // Then delete the session
+      const { error } = await supabase
+        .from('feedback_sessions')
+        .delete()
+        .eq('id', sessionId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['feedback-sessions'] });
+    }
+  });
+}
+
+export function useUpdateFeedbackSession() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ sessionId, ...updates }: { sessionId: string; [key: string]: any }) => {
+      const { data, error } = await supabase
+        .from('feedback_sessions')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', sessionId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['feedback-sessions'] });
+    }
+  });
+}
