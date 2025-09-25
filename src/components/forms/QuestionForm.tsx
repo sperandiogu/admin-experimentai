@@ -11,6 +11,7 @@ import type { Question, QuestionOption } from '../../types';
 
 interface QuestionFormProps {
   question?: Question;
+  defaultProductId?: string;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -22,7 +23,7 @@ const questionTypeOptions = [
   { value: 'boolean', label: 'Sim/Não' }
 ];
 
-export default function QuestionForm({ question, onSuccess, onCancel }: QuestionFormProps) {
+export default function QuestionForm({ question, defaultProductId, onSuccess, onCancel }: QuestionFormProps) {
   const { data: categories = [] } = useQuestionCategories();
   const { data: products = [] } = useProducts();
   const createQuestion = useCreateQuestion();
@@ -34,7 +35,7 @@ export default function QuestionForm({ question, onSuccess, onCancel }: Question
 
   const [formData, setFormData] = useState({
     category_id: question?.category_id || '',
-    product_id: question?.product_id || '',
+    product_id: question?.product_id || defaultProductId || '',
     question_text: question?.question_text || '',
     question_type: question?.question_type || 'multiple_choice',
     is_required: question?.is_required || false,

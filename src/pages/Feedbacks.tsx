@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, MessageSquare, Tag, Users } from 'lucide-react';
+import { Plus, MessageSquare, Tag, Users, Package, Eye } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
@@ -10,6 +10,8 @@ import CategoryForm from '../components/forms/CategoryForm';
 import QuestionDetailsModal from '../components/QuestionDetailsModal';
 import FeedbackResponsesTable from '../components/FeedbackResponsesTable';
 import FeedbackDetailsModal from '../components/FeedbackDetailsModal';
+import ProductQuestionManager from '../components/ProductQuestionManager';
+import EditionQuestionView from '../components/EditionQuestionView';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useQuestions, useQuestionCategories, useDeleteQuestion, useDeleteQuestionCategory } from '../hooks/useSupabase';
 import { useToast } from '../hooks/useToast';
@@ -23,6 +25,7 @@ export default function Feedbacks() {
   const { showToast } = useToast();
 
   const [activeTab, setActiveTab] = useState<'questions' | 'categories' | 'responses'>('responses');
+  const [questionView, setQuestionView] = useState<'by-product' | 'by-edition'>('by-product');
   
   // Question states
   const [showQuestionForm, setShowQuestionForm] = useState(false);
@@ -149,7 +152,7 @@ export default function Feedbacks() {
             }`}
           >
             <MessageSquare className="w-4 h-4 inline mr-2" />
-            Perguntas ({questions.length})
+            Gerenciar Perguntas ({questions.length})
           </button>
           <button
             onClick={() => setActiveTab('categories')}
@@ -162,6 +165,17 @@ export default function Feedbacks() {
             <Tag className="w-4 h-4 inline mr-2" />
             Categorias ({categories.length})
           </button>
+          <button
+            onClick={() => setActiveTab('view')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'view'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <Eye className="w-4 h-4 inline mr-2" />
+            Visualizar por Edição
+          </button>
         </nav>
       </div>
 
@@ -173,122 +187,11 @@ export default function Feedbacks() {
       )}
 
       {activeTab === 'questions' && (
-        <>
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card>
-              <div className="p-4">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-gray-900">{questionStats.total}</p>
-                  <p className="text-sm text-gray-600">Total</p>
-                </div>
-              </div>
-            </Card>
-            <Card>
-              <div className="p-4">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-green-600">{questionStats.active}</p>
-                  <p className="text-sm text-gray-600">Ativas</p>
-                </div>
-              </div>
-            </Card>
-            <Card>
-              <div className="p-4">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-blue-600">{questionStats.byProduct}</p>
-                  <p className="text-sm text-gray-600">Por Produto</p>
-                </div>
-              </div>
-            </Card>
-            <Card>
-              <div className="p-4">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-purple-600">{questionStats.general}</p>
-                  <p className="text-sm text-gray-600">Gerais</p>
-                </div>
-              </div>
-            </Card>
-          </div>
+        <ProductQuestionManager />
+      )}
 
-          {/* Questions Table */}
-          <Card>
-            <div className="p-6 pb-0">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Lista de Perguntas</h3>
-            </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Pergunta</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {questions.map((question) => (
-                  <TableRow key={question.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium text-gray-900 max-w-xs truncate">
-                          {question.question_text}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          Ordem: {question.order_index}
-                          {question.is_required && (
-                            <Badge variant="error" size="sm" className="ml-2">Obrigatória</Badge>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="info">{question.category?.name}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getQuestionTypeColor(question.question_type) as any}>
-                        {getQuestionTypeLabel(question.question_type)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={question.is_active ? 'success' : 'default'}>
-                        {question.is_active ? 'Ativa' : 'Inativa'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setViewingQuestion(question)}
-                        >
-                          Ver
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditingQuestion(question);
-                            setShowQuestionForm(true);
-                          }}
-                        >
-                          Editar
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setDeleteQuestionDialog({ isOpen: true, question })}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          Excluir
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
-        </>
+      {activeTab === 'view' && (
+        <EditionQuestionView />
       )}
 
       {activeTab === 'categories' && (
