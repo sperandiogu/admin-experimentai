@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { Search, Eye, User, Package, Calendar, Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import { Search, Eye, User, Package, Calendar, Clock, CheckCircle, AlertCircle, XCircle, Edit, Trash2 } from 'lucide-react';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import Badge from './ui/Badge';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './ui/Table';
 import Pagination from './ui/Pagination';
-import { useFeedbackSessions } from '../hooks/useSupabase';
+import Modal from './ui/Modal';
+import Input from './ui/Input';
+import Select from './ui/Select';
+import Textarea from './ui/Textarea';
+import ConfirmDialog from './ui/ConfirmDialog';
+import { useFeedbackSessions, useDeleteFeedbackSession, useUpdateFeedbackSession } from '../hooks/useSupabase';
+import { useToast } from '../hooks/useToast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { FeedbackSession } from '../types';
@@ -24,7 +30,6 @@ const statusLabels = {
   'in_progress': 'Em Progresso',
   'completed': 'Concluído',
   'abandoned': 'Abandonado'
-};
 
 const statusIcons = {
   'in_progress': Clock,
@@ -32,12 +37,37 @@ const statusIcons = {
   'abandoned': XCircle
 };
 
+const statusOptions = [
+  { value: 'in_progress', label: 'Em Progresso' },
+  { value: 'completed', label: 'Concluído' },
+  { value: 'abandoned', label: 'Abandonado' }
+];
 export default function FeedbackResponsesTable({ onViewDetails }: FeedbackResponsesTableProps) {
   const { data: sessions = [], isLoading } = useFeedbackSessions();
-  const [searchTerm, setSearchTerm] = useState('');
+  const deleteFeedbackSession = useDeleteFeedbackSession();
+  const updateFeedbackSession = useUpdateFeedbackSession();
+  const { showToast } = useToast();
+  
   const [statusFilter, setStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   
+  // Edit modal states
+  const [editingSession, setEditingSession] = useState<FeedbackSession | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    session_status: '',
+    user_email: '',
+    completion_badge: '',
+    final_message: ''
+  });
+  
+  // Delete dialog state
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    session: FeedbackSession | null;
+  }>({
+    isOpen: false,
+    session: null
+  });
   const itemsPerPage = 10;
 
   const filteredSessions = sessions.filter(session => {
@@ -62,6 +92,44 @@ export default function FeedbackResponsesTable({ onViewDetails }: FeedbackRespon
     completed: sessions.filter(s => s.session_status === 'completed').length,
     inProgress: sessions.filter(s => s.session_status === 'in_progress').length,
     abandoned: sessions.filter(s => s.session_status === 'abandoned').length
+  };
+
+  const handleEditSession = (session: FeedbackSession) => {
+    setEditingSession(session);
+    setEditFormData({
+      session_status: session.session_status,
+      user_email: session.user_email || '',
+      completion_badge: session.completion_badge || '',
+      final_message: session.final_message || ''
+    });
+  };
+
+  const handleUpdateSession = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSession) return;
+
+    try {
+      await updateFeedbackSession.mutateAsync({
+        sessionId: editingSession.id,
+        ...editFormData
+      });
+      showToast('Sessão atualizada com sucesso!', 'success');
+      setEditingSession(null);
+    } catch (error) {
+      showToast('Erro ao atualizar sessão', 'error');
+    }
+  };
+
+  const handleDeleteSession = async () => {
+    if (!deleteDialog.session) return;
+
+    try {
+      await deleteFeedbackSession.mutateAsync(deleteDialog.session.id);
+      showToast('Sessão excluída com sucesso!', 'success');
+      setDeleteDialog({ isOpen: false, session: null });
+    } catch (error) {
+      showToast('Erro ao excluir sessão', 'error');
+    }
   };
 
   if (isLoading) {
