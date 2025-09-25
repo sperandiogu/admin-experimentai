@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, MessageSquare, CreditCard as Edit, Trash2, Eye, Filter, Package, Tag, Users } from 'lucide-react';
+import { Plus, MessageSquare, Tag, Users } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
@@ -22,12 +22,9 @@ export default function Feedbacks() {
   const deleteCategory = useDeleteQuestionCategory();
   const { showToast } = useToast();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [productFilter, setProductFilter] = useState('');
-  const [activeTab, setActiveTab] = useState<'questions' | 'categories'>('questions');
+  const [activeTab, setActiveTab] = useState<'questions' | 'categories' | 'responses'>('responses');
   
-  // Question modals
+  // Question states
   const [showQuestionForm, setShowQuestionForm] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [viewingQuestion, setViewingQuestion] = useState<Question | null>(null);
@@ -36,7 +33,7 @@ export default function Feedbacks() {
     question: null
   });
 
-  // Category modals
+  // Category states
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<QuestionCategory | null>(null);
   const [deleteCategoryDialog, setDeleteCategoryDialog] = useState<{ isOpen: boolean; category: QuestionCategory | null }>({
@@ -44,13 +41,8 @@ export default function Feedbacks() {
     category: null
   });
 
-  const filteredQuestions = questions.filter(question => {
-    const matchesSearch = question.question_text.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !categoryFilter || question.category_id === categoryFilter;
-    const matchesProduct = !productFilter || 
-      (productFilter === 'no-product' ? !question.product_id : question.product_id === productFilter);
-    return matchesSearch && matchesCategory && matchesProduct;
-  });
+  // Feedback response states
+  const [viewingFeedbackSession, setViewingFeedbackSession] = useState<FeedbackSession | null>(null);
 
   const questionStats = {
     total: questions.length,
@@ -117,7 +109,7 @@ export default function Feedbacks() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Sistema de Feedbacks</h1>
-          <p className="text-gray-600 mt-1">Gerencie perguntas e categorias de feedback</p>
+          <p className="text-gray-600 mt-1">Gerencie perguntas, categorias e visualize respostas</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -137,6 +129,17 @@ export default function Feedbacks() {
       {/* Tabs */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('responses')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'responses'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <Users className="w-4 h-4 inline mr-2" />
+            Respostas
+          </button>
           <button
             onClick={() => setActiveTab('questions')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -161,6 +164,13 @@ export default function Feedbacks() {
           </button>
         </nav>
       </div>
+
+      {/* Tab Content */}
+      {activeTab === 'responses' && (
+        <FeedbackResponsesTable
+          onViewDetails={(session) => setViewingFeedbackSession(session)}
+        />
+      )}
 
       {activeTab === 'questions' && (
         <>
@@ -200,48 +210,6 @@ export default function Feedbacks() {
             </Card>
           </div>
 
-          {/* Filters */}
-          <Card>
-            <div className="p-6">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Buscar perguntas..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  />
-                </div>
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                >
-                  <option value="">Todas as categorias</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>{category.name}</option>
-                  ))}
-                </select>
-                <select
-                  value={productFilter}
-                  onChange={(e) => setProductFilter(e.target.value)}
-                  className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                >
-                  <option value="">Todos os produtos</option>
-                  <option value="no-product">Perguntas gerais</option>
-                  {Array.from(new Set(questions.filter(q => q.product).map(q => q.product!.id))).map((productId) => {
-                    const product = questions.find(q => q.product?.id === productId)?.product;
-                    return product ? (
-                      <option key={productId} value={productId}>{product.name}</option>
-                    ) : null;
-                  })}
-                </select>
-              </div>
-            </div>
-          </Card>
-
           {/* Questions Table */}
           <Card>
             <div className="p-6 pb-0">
@@ -252,14 +220,13 @@ export default function Feedbacks() {
                 <TableRow>
                   <TableHead>Pergunta</TableHead>
                   <TableHead>Categoria</TableHead>
-                  <TableHead>Produto</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredQuestions.map((question) => (
+                {questions.map((question) => (
                   <TableRow key={question.id}>
                     <TableCell>
                       <div>
@@ -278,16 +245,6 @@ export default function Feedbacks() {
                       <Badge variant="info">{question.category?.name}</Badge>
                     </TableCell>
                     <TableCell>
-                      {question.product ? (
-                        <div className="flex items-center gap-2">
-                          <Package className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm">{question.product.name}</span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-500 text-sm">Geral</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
                       <Badge variant={getQuestionTypeColor(question.question_type) as any}>
                         {getQuestionTypeLabel(question.question_type)}
                       </Badge>
@@ -304,7 +261,7 @@ export default function Feedbacks() {
                           size="sm"
                           onClick={() => setViewingQuestion(question)}
                         >
-                          <Eye className="w-4 h-4" />
+                          Ver
                         </Button>
                         <Button
                           variant="ghost"
@@ -314,7 +271,7 @@ export default function Feedbacks() {
                             setShowQuestionForm(true);
                           }}
                         >
-                          <Edit className="w-4 h-4" />
+                          Editar
                         </Button>
                         <Button
                           variant="ghost"
@@ -322,7 +279,7 @@ export default function Feedbacks() {
                           onClick={() => setDeleteQuestionDialog({ isOpen: true, question })}
                           className="text-red-600 hover:text-red-700"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          Excluir
                         </Button>
                       </div>
                     </TableCell>
@@ -374,7 +331,7 @@ export default function Feedbacks() {
                           setShowCategoryForm(true);
                         }}
                       >
-                        <Edit className="w-4 h-4" />
+                        Editar
                       </Button>
                       <Button
                         variant="ghost"
@@ -382,7 +339,7 @@ export default function Feedbacks() {
                         onClick={() => setDeleteCategoryDialog({ isOpen: true, category })}
                         className="text-red-600 hover:text-red-700"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        Excluir
                       </Button>
                     </div>
                   </TableCell>
@@ -444,6 +401,13 @@ export default function Feedbacks() {
         question={viewingQuestion}
         isOpen={!!viewingQuestion}
         onClose={() => setViewingQuestion(null)}
+      />
+
+      {/* Feedback Details Modal */}
+      <FeedbackDetailsModal
+        session={viewingFeedbackSession}
+        isOpen={!!viewingFeedbackSession}
+        onClose={() => setViewingFeedbackSession(null)}
       />
 
       {/* Delete Question Dialog */}
