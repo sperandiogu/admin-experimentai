@@ -30,6 +30,7 @@ const statusLabels = {
   'in_progress': 'Em Progresso',
   'completed': 'Concluído',
   'abandoned': 'Abandonado'
+};
 
 const statusIcons = {
   'in_progress': Clock,
@@ -42,12 +43,14 @@ const statusOptions = [
   { value: 'completed', label: 'Concluído' },
   { value: 'abandoned', label: 'Abandonado' }
 ];
+
 export default function FeedbackResponsesTable({ onViewDetails }: FeedbackResponsesTableProps) {
   const { data: sessions = [], isLoading } = useFeedbackSessions();
   const deleteFeedbackSession = useDeleteFeedbackSession();
   const updateFeedbackSession = useUpdateFeedbackSession();
   const { showToast } = useToast();
   
+  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   
