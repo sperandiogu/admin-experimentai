@@ -661,13 +661,19 @@ export function useCreateQuestion() {
   
   return useMutation({
     mutationFn: async (question: Omit<Question, 'id' | 'created_at' | 'updated_at'>) => {
+      console.log('Enviando pergunta para o banco:', question);
       const { data, error } = await supabase
         .from('questions')
         .insert(question)
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro detalhado ao criar pergunta:', error);
+        console.error('Dados enviados:', question);
+        throw error;
+      }
+      console.log('Pergunta criada com sucesso:', data);
       return data;
     },
     onSuccess: () => {
@@ -788,13 +794,17 @@ export function useCreateQuestionOption() {
   
   return useMutation({
     mutationFn: async (option: Omit<QuestionOption, 'id' | 'created_at'>) => {
+      console.log('Enviando opção para o banco:', option);
       const { data, error } = await supabase
         .from('question_options')
         .insert(option)
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao criar opção:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: (_, variables) => {
@@ -809,6 +819,7 @@ export function useUpdateQuestionOption() {
   
   return useMutation({
     mutationFn: async (option: Partial<QuestionOption> & { id: string }) => {
+      console.log('Atualizando opção no banco:', option);
       const { data, error } = await supabase
         .from('question_options')
         .update(option)
@@ -816,7 +827,10 @@ export function useUpdateQuestionOption() {
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao atualizar opção:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: (data) => {

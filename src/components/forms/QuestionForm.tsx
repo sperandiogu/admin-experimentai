@@ -89,10 +89,13 @@ export default function QuestionForm({ question, onSuccess, onCancel }: Question
     
     if (!validateForm()) return;
 
+    console.log('Enviando pergunta:', formData);
+
     try {
       let questionId: string;
 
       if (question) {
+        console.log('Atualizando pergunta existente...');
         const updatedQuestion = await updateQuestion.mutateAsync({
           id: question.id,
           ...formData,
@@ -100,6 +103,7 @@ export default function QuestionForm({ question, onSuccess, onCancel }: Question
         });
         questionId = updatedQuestion.id;
       } else {
+        console.log('Criando nova pergunta...');
         const newQuestion = await createQuestion.mutateAsync({
           ...formData,
           product_id: formData.product_id || null
@@ -107,8 +111,11 @@ export default function QuestionForm({ question, onSuccess, onCancel }: Question
         questionId = newQuestion.id;
       }
 
+      console.log('Pergunta salva com ID:', questionId);
+
       // Handle options for multiple choice and rating questions
       if (formData.question_type === 'multiple_choice' || formData.question_type === 'rating') {
+        console.log('Processando opções:', options);
         // Delete removed options
         if (question?.options) {
           const removedOptions = question.options.filter(
@@ -116,6 +123,7 @@ export default function QuestionForm({ question, onSuccess, onCancel }: Question
           );
           
           for (const removedOption of removedOptions) {
+            console.log('Removendo opção:', removedOption);
             await deleteOption.mutateAsync({ id: removedOption.id, questionId });
           }
         }
@@ -125,17 +133,21 @@ export default function QuestionForm({ question, onSuccess, onCancel }: Question
           const option = options[i];
           const optionData = {
             question_id: questionId,
-            option_text: option.option_text || '',
+            option_label: option.option_text || '', // Mudança: option_text -> option_label
             option_value: option.option_value || i + 1,
             order_index: i + 1
           };
 
+          console.log('Processando opção:', optionData);
+
           if (option.id) {
+            console.log('Atualizando opção existente...');
             await updateOption.mutateAsync({
               id: option.id,
               ...optionData
             });
           } else {
+            console.log('Criando nova opção...');
             await createOption.mutateAsync(optionData);
           }
         }
@@ -144,6 +156,8 @@ export default function QuestionForm({ question, onSuccess, onCancel }: Question
       showToast(question ? 'Pergunta atualizada com sucesso!' : 'Pergunta criada com sucesso!', 'success');
       onSuccess();
     } catch (error) {
+      console.error('Erro completo:', error);
+      console.error('Erro ao salvar pergunta:', error.message || error);
       showToast('Erro ao salvar pergunta', 'error');
     }
   };
@@ -162,7 +176,7 @@ export default function QuestionForm({ question, onSuccess, onCancel }: Question
 
   const updateOptionText = (index: number, text: string) => {
     const newOptions = [...options];
-    newOptions[index] = { ...newOptions[index], option_text: text };
+    newOptions[index] = { ...newOptions[index], option_label: text };
     setOptions(newOptions);
   };
 
@@ -176,16 +190,16 @@ export default function QuestionForm({ question, onSuccess, onCancel }: Question
   useEffect(() => {
     if (formData.question_type === 'emoji_rating' && options.length === 0) {
       setOptions([
-        { option_text: 'Muito Ruim', option_value: 1, order_index: 1 },
-        { option_text: 'Ruim', option_value: 2, order_index: 2 },
-        { option_text: 'Regular', option_value: 3, order_index: 3 },
-        { option_text: 'Bom', option_value: 4, order_index: 4 },
-        { option_text: 'Excelente', option_value: 5, order_index: 5 }
+        { option_label: 'Muito Ruim', option_value: 1, order_index: 1 },
+        { option_label: 'Ruim', option_value: 2, order_index: 2 },
+        { option_label: 'Regular', option_value: 3, order_index: 3 },
+        { option_label: 'Bom', option_value: 4, order_index: 4 },
+        { option_label: 'Excelente', option_value: 5, order_index: 5 }
       ]);
     } else if (formData.question_type === 'boolean' && options.length === 0) {
       setOptions([
-        { option_text: 'Sim', option_value: 1, order_index: 1 },
-        { option_text: 'Não', option_value: 0, order_index: 2 }
+        { option_label: 'Sim', option_value: 1, order_index: 1 },
+        { option_label: 'Não', option_value: 0, order_index: 2 }
       ]);
     } else if (formData.question_type === 'text') {
       setOptions([]);
@@ -297,7 +311,7 @@ export default function QuestionForm({ question, onSuccess, onCancel }: Question
                   
                   <div className="flex-1">
                     <Input
-                      value={option.option_text || ''}
+                      value={option.option_label || ''} 
                       onChange={(value) => updateOptionText(index, value)}
                       placeholder="Texto da opção"
                       required

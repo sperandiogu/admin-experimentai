@@ -86,7 +86,7 @@ export interface QuestionCategory {
 export interface QuestionOption {
   id: string;
   question_id: string;
-  option_text: string;
+  option_label: string; // Mudança: option_text -> option_label conforme schema do banco
   option_value: number;
   order_index: number;
   created_at: string;

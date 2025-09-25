@@ -118,7 +118,7 @@ export default function QuestionDetailsModal({ question, isOpen, onClose }: Ques
                       </span>
                       <span className="text-gray-900">{option.option_text}</span>
                     </div>
-                    <Badge variant="default">Valor: {option.option_value}</Badge>
+                    <span className="text-gray-900">{option.option_label}</span>
                   </div>
                 ))}
             </div>
