@@ -32,33 +32,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser) {
-        try {
-          // Obter o token JWT do Firebase
-          const idToken = await firebaseUser.getIdToken();
-          
-          // Tentar autenticar no Supabase com o token do Firebase
-          console.log('Tentando autenticar no Supabase...');
-          const { data, error } = await supabase.auth.signInWithIdToken({ 
-            provider: 'firebase', 
-            token: idToken 
-          });
-          
-          if (error) {
-            console.error('Erro ao autenticar no Supabase:', error);
-            // Se falhar, usar sessão anônima ou temporária
-            console.log('Continuando sem autenticação Supabase...');
-          } else {
-            console.log('Autenticação Supabase bem-sucedida:', data);
-          }
-          
-        } catch (error) {
-          console.error('Erro ao sincronizar autenticação com Supabase:', error);
-        }
-        
         setUser({
           id: firebaseUser.uid,
           email: firebaseUser.email || '',
@@ -67,8 +40,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: 'admin'
         });
       } else {
-        // Limpar token do Supabase quando usuário faz logout
-        await supabase.auth.signOut();
         setUser(null);
       }
       setLoading(false);
@@ -97,8 +68,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      // Limpar token do Supabase e fazer logout no Firebase
-      await supabase.auth.signOut();
       await firebaseSignOut(auth);
     } catch (error: any) {
       throw new Error('Erro ao fazer logout');
