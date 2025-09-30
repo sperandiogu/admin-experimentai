@@ -37,20 +37,25 @@ export interface BrandHistory {
 
 // Brand Statuses Hooks
 export function useBrandStatuses() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   
   return useQuery({
     queryKey: ['brand-statuses'],
-    enabled: !!user,
+    enabled: !!user && !authLoading,
     queryFn: async () => {
-      if (!user) throw new Error('Não autenticado');
+      console.log('Buscando brand statuses, usuário:', user);
       
       const { data, error } = await supabase
         .from('brand_statuses')
         .select('*')
         .order('order', { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar brand statuses:', error);
+        throw error;
+      }
+      
+      console.log('Brand statuses encontrados:', data);
       return data as BrandStatus[];
     }
   });
@@ -122,13 +127,13 @@ export function useDeleteBrandStatus() {
 
 // Brands Hooks
 export function useBrands() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   
   return useQuery({
     queryKey: ['brands'],
-    enabled: !!user,
+    enabled: !!user && !authLoading,
     queryFn: async () => {
-      if (!user) throw new Error('Não autenticado');
+      console.log('Buscando brands, usuário:', user);
       
       const { data, error } = await supabase
         .from('brands')
@@ -138,7 +143,12 @@ export function useBrands() {
         `)
         .order('order', { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar brands:', error);
+        throw error;
+      }
+      
+      console.log('Brands encontradas:', data);
       return data as Brand[];
     }
   });
