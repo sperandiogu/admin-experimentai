@@ -23,7 +23,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       return fetch(url, {
         ...options,
         headers: {
-          ...options?.headers,
+          ...new Headers(options?.headers),
         }
       });
     }
