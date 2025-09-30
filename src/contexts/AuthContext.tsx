@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Tentar autenticar no Supabase com o token do Firebase
           console.log('Tentando autenticar no Supabase...');
           const { data, error } = await supabase.auth.signInWithIdToken({ 
-            provider: 'jwt', 
+            provider: 'firebase', 
             token: idToken 
           });
           
