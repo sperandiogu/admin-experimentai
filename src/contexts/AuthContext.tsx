@@ -23,8 +23,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
-  signIn
-}WithGoogleRedirect: () => Promise<void>;
+  signInWithGoogleRedirect: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -33,6 +32,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
         setUser({
           id: firebaseUser.uid,
           email: firebaseUser.email || '',
@@ -67,10 +70,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithGoogleRedirect = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.addScope('email');
+      provider.addScope('profile');
+      
+      // Force account selection
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+
+      await signInWithRedirect(auth, provider);
+    } catch (error: any) {
+      console.error('Erro de autenticação:', error);
+      throw new Error(getErrorMessage(error.code));
+    }
+  };
+
   const signOut = async () => {
     try {
-      // Limpar token do Supabase e fazer logout no Firebase
-      await supabase.auth.signOut();
       await firebaseSignOut(auth);
     } catch (error: any) {
       throw new Error('Erro ao fazer logout');
@@ -100,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     loading,
     signInWithGoogle,
+    signInWithGoogleRedirect,
     signOut,
   };
 
