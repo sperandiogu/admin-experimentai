@@ -10,6 +10,7 @@ import {
   MessageSquare,
   Settings,
   X
+  Building2
 } from 'lucide-react';
 import type { Page } from '../../App';
 
@@ -30,6 +31,7 @@ const navigation = [
   { name: 'Faturas', icon: FileText, page: 'invoices' as Page },
   { name: 'Feedbacks', icon: MessageSquare, page: 'feedbacks' as Page },
   { name: 'Configurações', icon: Settings, page: 'settings' as Page },
+  { name: 'Marcas', icon: Building2, page: 'brands' as Page },
 ];
 
 export default function Sidebar({ currentPage, setCurrentPage, isOpen, setIsOpen }: SidebarProps) {

@@ -16,6 +16,7 @@ import Invoices from './pages/Invoices';
 import Boxes from './pages/Boxes';
 import Feedbacks from './pages/Feedbacks';
 import Settings from './pages/Settings';
+import Brands from './pages/Brands';
 
 export type Page =
   | 'dashboard'
@@ -27,6 +28,7 @@ export type Page =
   | 'boxes'
   | 'feedbacks'
   | 'settings';
+  | 'brands';
 
 const queryClient = new QueryClient();
 
@@ -71,6 +73,8 @@ function AppContent() {
         return <Feedbacks />;
       case 'settings':
         return <Settings />;
+      case 'brands':
+        return <Brands />;
       default:
         return <Dashboard />;
     }
