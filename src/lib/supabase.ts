@@ -20,12 +20,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     },
     fetch: (url: RequestInfo | URL, options?: RequestInit) => {
       console.log('Fazendo requisição Supabase para:', url);
-      return fetch(url, {
-        ...options,
-        headers: {
-          ...new Headers(options?.headers),
-        }
-      });
+      return fetch(url, options);
     }
   }
 });
