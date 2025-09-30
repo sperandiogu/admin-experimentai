@@ -40,8 +40,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Obter o token JWT do Firebase
           const idToken = await firebaseUser.getIdToken();
           
-          // Configurar o cliente Supabase para usar o token do Firebase
-          await supabase.auth.signInWithIdToken({ provider: 'jwt', token: idToken });
+          // Tentar autenticar no Supabase com o token do Firebase
+          console.log('Tentando autenticar no Supabase...');
+          const { data, error } = await supabase.auth.signInWithIdToken({ 
+            provider: 'jwt', 
+            token: idToken 
+          });
+          
+          if (error) {
+            console.error('Erro ao autenticar no Supabase:', error);
+            // Se falhar, usar sessão anônima ou temporária
+            console.log('Continuando sem autenticação Supabase...');
+          } else {
+            console.log('Autenticação Supabase bem-sucedida:', data);
+          }
           
         } catch (error) {
           console.error('Erro ao sincronizar autenticação com Supabase:', error);

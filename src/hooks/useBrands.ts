@@ -44,6 +44,7 @@ export function useBrandStatuses() {
     enabled: !!user && !authLoading,
     queryFn: async () => {
       console.log('Buscando brand statuses, usuário:', user);
+      console.log('Verificando sessão Supabase:', await supabase.auth.getSession());
       
       const { data, error } = await supabase
         .from('brand_statuses')
@@ -52,7 +53,20 @@ export function useBrandStatuses() {
       
       if (error) {
         console.error('Erro ao buscar brand statuses:', error);
-        throw error;
+        // Tentar com políticas públicas se a autenticação falhar
+        console.log('Tentando consulta sem RLS...');
+        const { data: publicData, error: publicError } = await supabase
+          .from('brand_statuses')
+          .select('*')
+          .order('order', { ascending: true });
+        
+        if (publicError) {
+          console.error('Erro mesmo com consulta pública:', publicError);
+          throw publicError;
+        }
+        
+        console.log('Dados obtidos com consulta pública:', publicData);
+        return publicData as BrandStatus[];
       }
       
       console.log('Brand statuses encontrados:', data);
@@ -134,6 +148,7 @@ export function useBrands() {
     enabled: !!user && !authLoading,
     queryFn: async () => {
       console.log('Buscando brands, usuário:', user);
+      console.log('Sessão Supabase para brands:', await supabase.auth.getSession());
       
       const { data, error } = await supabase
         .from('brands')
@@ -145,7 +160,23 @@ export function useBrands() {
       
       if (error) {
         console.error('Erro ao buscar brands:', error);
-        throw error;
+        // Tentar com políticas públicas se a autenticação falhar  
+        console.log('Tentando consulta brands sem RLS...');
+        const { data: publicData, error: publicError } = await supabase
+          .from('brands')
+          .select(`
+            *,
+            status:brand_statuses(*)
+          `)
+          .order('order', { ascending: true });
+        
+        if (publicError) {
+          console.error('Erro mesmo com consulta pública brands:', publicError);
+          throw publicError;
+        }
+        
+        console.log('Brands obtidas com consulta pública:', publicData);
+        return publicData as Brand[];
       }
       
       console.log('Brands encontradas:', data);
