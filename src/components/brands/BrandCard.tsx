@@ -24,6 +24,7 @@ export default function BrandCard({ brand, onEdit, onDragStart, onDragEnd }: Bra
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleDelete = async () => {
     try {
@@ -36,6 +37,16 @@ export default function BrandCard({ brand, onEdit, onDragStart, onDragEnd }: Bra
     }
   };
 
+  const handleDragStart = (e: React.DragEvent) => {
+    setIsDragging(true);
+    onDragStart(e, brand);
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    setIsDragging(false);
+    onDragEnd(e);
+  };
+
   const isOverdue = brand.deadline && new Date(brand.deadline) < new Date();
   const isDueSoon = brand.deadline && !isOverdue && 
     new Date(brand.deadline) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
@@ -43,10 +54,12 @@ export default function BrandCard({ brand, onEdit, onDragStart, onDragEnd }: Bra
   return (
     <>
       <Card
-        className="cursor-move hover:shadow-md transition-all duration-200 group"
+        className={`cursor-move hover:shadow-md transition-all duration-200 group select-none ${
+          isDragging ? 'opacity-50 scale-95 rotate-2' : 'hover:scale-105'
+        }`}
         draggable
-        onDragStart={(e) => onDragStart(e, brand)}
-        onDragEnd={onDragEnd}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
       >
         <div className="p-4">
           {/* Header */}

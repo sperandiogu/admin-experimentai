@@ -31,24 +31,25 @@ export default function KanbanBoard() {
   const handleDragStart = (e: React.DragEvent, brand: Brand) => {
     setDraggedBrand(brand);
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', e.currentTarget.outerHTML);
-    e.currentTarget.classList.add('opacity-50');
+    e.dataTransfer.setData('text/plain', brand.id);
   };
 
   const handleDragEnd = (e: React.DragEvent) => {
-    e.currentTarget.classList.remove('opacity-50');
     setDraggedBrand(null);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
   };
 
   const handleDrop = async (e: React.DragEvent, targetStatusId: string) => {
     e.preventDefault();
+    e.stopPropagation();
     
     if (!draggedBrand || draggedBrand.status_id === targetStatusId) {
+      setDraggedBrand(null);
       return;
     }
 
@@ -62,6 +63,8 @@ export default function KanbanBoard() {
     } catch (error) {
       showToast('Erro ao mover marca', 'error');
     }
+    
+    setDraggedBrand(null);
   };
 
   const handleNewBrand = (statusId: string) => {
@@ -130,11 +133,14 @@ export default function KanbanBoard() {
       <div className="flex gap-6 overflow-x-auto pb-4 min-h-96">
         {statuses.map((status) => {
           const statusBrands = brandsByStatus[status.id] || [];
+          const isDropTarget = draggedBrand && draggedBrand.status_id !== status.id;
           
           return (
             <div
               key={status.id}
-              className="flex-shrink-0 w-80"
+              className={`flex-shrink-0 w-80 transition-all duration-200 ${
+                isDropTarget ? 'ring-2 ring-blue-300 ring-opacity-50 bg-blue-50' : ''
+              }`}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, status.id)}
             >
