@@ -23,7 +23,8 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
-  signInWithGoogleRedirect: () => Promise<void>;
+  signIn
+}WithGoogleRedirect: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -68,6 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Limpar token do Supabase e fazer logout no Firebase
+      await supabase.auth.signOut();
       await firebaseSignOut(auth);
     } catch (error: any) {
       throw new Error('Erro ao fazer logout');
