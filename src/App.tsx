@@ -27,7 +27,7 @@ export type Page =
   | 'invoices'
   | 'boxes'
   | 'feedbacks'
-  | 'settings';
+  | 'settings'
   | 'brands';
 
 const queryClient = new QueryClient();
