@@ -61,13 +61,18 @@ export function useCreateBrandStatus() {
   
   return useMutation({
     mutationFn: async (status: Omit<BrandStatus, 'id' | 'created_at'>) => {
+      console.log('Criando status:', status);
       const { data, error } = await supabase
         .from('brand_statuses')
         .insert(status)
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao criar status:', error);
+        throw error;
+      }
+      console.log('Status criado com sucesso:', data);
       return data;
     },
     onSuccess: () => {

@@ -55,7 +55,7 @@ export default function StatusForm({ onClose }: StatusFormProps) {
     setFormData({
       name: '',
       color: defaultColors[0],
-      order: statuses.length + 1
+      order: Math.max(...statuses.map(s => s.order), 0) + 1
     });
     setShowForm(true);
   };
@@ -78,6 +78,8 @@ export default function StatusForm({ onClose }: StatusFormProps) {
       return;
     }
 
+    console.log('Submetendo formulário com dados:', formData);
+
     try {
       if (editingStatus) {
         await updateStatus.mutateAsync({
@@ -91,7 +93,13 @@ export default function StatusForm({ onClose }: StatusFormProps) {
       }
       
       setShowForm(false);
+      setFormData({
+        name: '',
+        color: defaultColors[0],
+        order: statuses.length + 1
+      });
     } catch (error) {
+      console.error('Erro detalhado:', error);
       showToast('Erro ao salvar status', 'error');
     }
   };
@@ -228,6 +236,7 @@ export default function StatusForm({ onClose }: StatusFormProps) {
                     formData.color === color ? 'border-gray-400 scale-110' : 'border-gray-200'
                   }`}
                   style={{ backgroundColor: color }}
+                disabled={createStatus.isPending || updateStatus.isPending}
                   onClick={() => setFormData({ ...formData, color })}
                 />
               ))}

@@ -82,6 +82,10 @@ export default function KanbanBoard() {
     setSelectedStatusId('');
   };
 
+  const handleStatusFormClose = () => {
+    setShowStatusForm(false);
+  };
+
   if (statusLoading || brandsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -192,11 +196,11 @@ export default function KanbanBoard() {
       {/* Status Form Modal */}
       <Modal
         isOpen={showStatusForm}
-        onClose={() => setShowStatusForm(false)}
+        onClose={handleStatusFormClose}
         title="Gerenciar Status"
         size="lg"
       >
-        <StatusForm onClose={() => setShowStatusForm(false)} />
+        <StatusForm onClose={handleStatusFormClose} />
       </Modal>
     </div>
   );
