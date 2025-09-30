@@ -9,7 +9,7 @@ import {
   Box,
   MessageSquare,
   Settings,
-  X
+  X,
   Building2
 } from 'lucide-react';
 import type { Page } from '../../App';
