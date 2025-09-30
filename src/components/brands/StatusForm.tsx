@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, GripVertical } from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, GripVertical } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Input from '../ui/Input';

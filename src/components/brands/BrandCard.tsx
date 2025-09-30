@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, DollarSign, User, MoreVertical, Edit, Trash2, History, Clock } from 'lucide-react';
+import { Calendar, DollarSign, User, MoreVertical, CreditCard as Edit, Trash2, History, Clock } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
