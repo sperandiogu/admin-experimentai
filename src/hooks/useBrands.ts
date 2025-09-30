@@ -42,35 +42,30 @@ export function useBrandStatuses() {
   return useQuery({
     queryKey: ['brand-statuses'],
     enabled: !!user && !authLoading,
+    retry: 3,
+    retryDelay: 1000,
     queryFn: async () => {
       console.log('Buscando brand statuses, usuário:', user);
-      console.log('Verificando sessão Supabase:', await supabase.auth.getSession());
       
-      const { data, error } = await supabase
-        .from('brand_statuses')
-        .select('*')
-        .order('order', { ascending: true });
-      
-      if (error) {
-        console.error('Erro ao buscar brand statuses:', error);
-        // Tentar com políticas públicas se a autenticação falhar
-        console.log('Tentando consulta sem RLS...');
-        const { data: publicData, error: publicError } = await supabase
+      try {
+        console.log('Tentando consulta de brand_statuses...');
+        const { data, error } = await supabase
           .from('brand_statuses')
           .select('*')
           .order('order', { ascending: true });
         
-        if (publicError) {
-          console.error('Erro mesmo com consulta pública:', publicError);
-          throw publicError;
+        if (error) {
+          console.error('Erro ao buscar brand statuses:', error);
+          throw error;
         }
         
-        console.log('Dados obtidos com consulta pública:', publicData);
-        return publicData as BrandStatus[];
+        console.log('Brand statuses encontrados:', data);
+        return data as BrandStatus[];
+      } catch (error) {
+        console.error('Erro de conectividade ao buscar brand statuses:', error);
+        // Retorna array vazio se houver erro de conexão
+        return [] as BrandStatus[];
       }
-      
-      console.log('Brand statuses encontrados:', data);
-      return data as BrandStatus[];
     }
   });
 }
@@ -146,23 +141,14 @@ export function useBrands() {
   return useQuery({
     queryKey: ['brands'],
     enabled: !!user && !authLoading,
+    retry: 3,
+    retryDelay: 1000,
     queryFn: async () => {
       console.log('Buscando brands, usuário:', user);
-      console.log('Sessão Supabase para brands:', await supabase.auth.getSession());
       
-      const { data, error } = await supabase
-        .from('brands')
-        .select(`
-          *,
-          status:brand_statuses(*)
-        `)
-        .order('order', { ascending: true });
-      
-      if (error) {
-        console.error('Erro ao buscar brands:', error);
-        // Tentar com políticas públicas se a autenticação falhar  
-        console.log('Tentando consulta brands sem RLS...');
-        const { data: publicData, error: publicError } = await supabase
+      try {
+        console.log('Tentando consulta de brands...');
+        const { data, error } = await supabase
           .from('brands')
           .select(`
             *,
@@ -170,17 +156,18 @@ export function useBrands() {
           `)
           .order('order', { ascending: true });
         
-        if (publicError) {
-          console.error('Erro mesmo com consulta pública brands:', publicError);
-          throw publicError;
+        if (error) {
+          console.error('Erro ao buscar brands:', error);
+          throw error;
         }
         
-        console.log('Brands obtidas com consulta pública:', publicData);
-        return publicData as Brand[];
+        console.log('Brands encontradas:', data);
+        return data as Brand[];
+      } catch (error) {
+        console.error('Erro de conectividade ao buscar brands:', error);
+        // Retorna array vazio se houver erro de conexão
+        return [] as Brand[];
       }
-      
-      console.log('Brands encontradas:', data);
-      return data as Brand[];
     }
   });
 }

@@ -253,30 +253,59 @@ export function useDashboardStats() {
   
   return useQuery({
     queryKey: ['dashboard-stats'],
+    enabled: !!user,
+    retry: 3,
+    retryDelay: 1000,
     queryFn: async () => {
       if (!user) throw new Error('Não autenticado');
       
-      const [customers, orders, invoices, products] = await Promise.all([
-        supabase.from('customer').select('*', { count: 'exact' }),
-        supabase.from('order').select('*', { count: 'exact' }),
-        supabase.from('invoice').select('*', { count: 'exact' }),
-        supabase.from('products').select('*', { count: 'exact' })
-      ]);
+      try {
+        console.log('Iniciando consulta de estatísticas do dashboard...');
+        
+        const [customers, orders, invoices, products] = await Promise.all([
+          supabase.from('customer').select('*', { count: 'exact' }).then(result => {
+            console.log('Resultado customers:', result);
+            return result;
+          }),
+          supabase.from('order').select('*', { count: 'exact' }).then(result => {
+            console.log('Resultado orders:', result);
+            return result;
+          }),
+          supabase.from('invoice').select('*', { count: 'exact' }).then(result => {
+            console.log('Resultado invoices:', result);
+            return result;
+          }),
+          supabase.from('products').select('*', { count: 'exact' }).then(result => {
+            console.log('Resultado products:', result);
+            return result;
+          })
+        ]);
 
-      const totalRevenue = await supabase
-        .from('invoice')
-        .select('amount')
-        .eq('status', 'paid');
+        const totalRevenue = await supabase
+          .from('invoice')
+          .select('amount')
+          .eq('status', 'paid');
 
-      const revenue = totalRevenue.data?.reduce((sum, invoice) => sum + ((invoice.amount || 0) / 100), 0) || 0;
+        const revenue = totalRevenue.data?.reduce((sum, invoice) => sum + ((invoice.amount || 0) / 100), 0) || 0;
 
-      return {
-        totalCustomers: customers.count || 0,
-        totalOrders: orders.count || 0,
-        totalInvoices: invoices.count || 0,
-        totalProducts: products.count || 0,
-        totalRevenue: revenue
-      };
+        return {
+          totalCustomers: customers.count || 0,
+          totalOrders: orders.count || 0,
+          totalInvoices: invoices.count || 0,
+          totalProducts: products.count || 0,
+          totalRevenue: revenue
+        };
+      } catch (error) {
+        console.error('Erro detalhado na consulta de estatísticas:', error);
+        // Retorna valores padrão se houver erro de conectividade
+        return {
+          totalCustomers: 0,
+          totalOrders: 0,
+          totalInvoices: 0,
+          totalProducts: 0,
+          totalRevenue: 0
+        };
+      }
     }
   });
 }
