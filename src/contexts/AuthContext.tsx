@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const idToken = await firebaseUser.getIdToken();
           
           // Configurar o cliente Supabase para usar o token do Firebase
-          supabase.auth.setAuth(idToken);
+          await supabase.auth.signInWithIdToken({ provider: 'jwt', token: idToken });
           
         } catch (error) {
           console.error('Erro ao sincronizar autenticação com Supabase:', error);
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       } else {
         // Limpar token do Supabase quando usuário faz logout
-        supabase.auth.setAuth(null);
+        await supabase.auth.signOut();
         setUser(null);
       }
       setLoading(false);
@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       // Limpar token do Supabase e fazer logout no Firebase
-      supabase.auth.setAuth(null);
+      await supabase.auth.signOut();
       await firebaseSignOut(auth);
     } catch (error: any) {
       throw new Error('Erro ao fazer logout');
